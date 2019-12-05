@@ -26,10 +26,16 @@ use crate::Result;
 use wapc_guest::host_call;
 
 /// An implementation of the opaque or "loosely typed" capability provider which depends upon the host runtime
-pub(crate) struct DefaultRawCapability {}
+pub struct DefaultRawCapability {}
 
 impl DefaultRawCapability {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for DefaultRawCapability {
+    fn default() -> Self {
         DefaultRawCapability {}
     }
 }

@@ -32,10 +32,16 @@ use codec::messaging::{
 use wascc_codec as codec;
 
 /// Exposes message broker functionality to actor modules
-pub(crate) struct DefaultMessageBroker {}
+pub struct DefaultMessageBroker {}
 
 impl DefaultMessageBroker {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
+        DefaultMessageBroker::default()
+    }
+}
+
+impl Default for DefaultMessageBroker {
+    fn default() -> Self {
         DefaultMessageBroker {}
     }
 }

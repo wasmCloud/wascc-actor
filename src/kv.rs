@@ -30,10 +30,16 @@ use wascc_codec as codec;
 pub const CAPID_KEYVALUE: &str = "wascc:keyvalue";
 
 /// An abstraction around a host runtime capability for a key-value store
-pub(crate) struct DefaultKeyValueStore {}
+pub struct DefaultKeyValueStore {}
 
 impl DefaultKeyValueStore {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for DefaultKeyValueStore {
+    fn default() -> Self {
         DefaultKeyValueStore {}
     }
 }
