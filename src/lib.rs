@@ -123,49 +123,56 @@ pub trait RawCapability {
 /// The capabilities context is the gateway through which all actors communicate with a host runtime. A reference
 /// to a capabilities context is passed to the receive function defined by the actor. Individual capabilities are separated
 /// through function calls for each capability provider, including any bound opaque `raw` providers.
-pub struct CapabilitiesContext<K, M, R>
-where
-    K: KeyValueStore,
-    M: MessageBroker,
-    R: RawCapability,
-{
-    kv: K,
-    msg: M,
-    raw: R,
+pub struct CapabilitiesContext {
+    kv: Box<dyn KeyValueStore>,
+    msg: Box<dyn MessageBroker>,
+    raw: Box<dyn RawCapability>,
 }
 
-impl<K, M, R> CapabilitiesContext<K, M, R>
-where
-    K: KeyValueStore,
-    M: MessageBroker,
-    R: RawCapability,
-{
-    /// Creates a new capabilities context. This is invoked by the `actor_receive` macro
-    pub fn new(
-    ) -> CapabilitiesContext<DefaultKeyValueStore, DefaultMessageBroker, DefaultRawCapability> {
+impl Default for CapabilitiesContext {
+    fn default() -> CapabilitiesContext {
         CapabilitiesContext {
-            kv: DefaultKeyValueStore::new(),
-            msg: DefaultMessageBroker::new(),
-            raw: DefaultRawCapability::new(),
+            kv: Box::new(DefaultKeyValueStore::new()),
+            msg: Box::new(DefaultMessageBroker::new()),
+            raw: Box::new(DefaultRawCapability::new()),
+        }
+    }
+}
+
+impl CapabilitiesContext {
+    /// Creates a new capabilities context. This is invoked by the `actor_receive` macro
+    pub fn new() -> CapabilitiesContext {
+        CapabilitiesContext {
+            kv: Box::new(DefaultKeyValueStore::new()),
+            msg: Box::new(DefaultMessageBroker::new()),
+            raw: Box::new(DefaultRawCapability::new()),
         }
     }
 
     /// Creates a custom capabilities context. This should be invoked by unit tests looking
     /// to test a receive function with mock capabilities
-    pub fn custom(kv: K, msg: M, raw: R) -> Self {
-        CapabilitiesContext { kv, msg, raw }
+    pub fn custom(
+        kv: impl KeyValueStore + 'static,
+        msg: impl MessageBroker + 'static,
+        raw: impl RawCapability + 'static,
+    ) -> Self {
+        CapabilitiesContext {
+            kv: Box::new(kv),
+            msg: Box::new(msg),
+            raw: Box::new(raw),
+        }
     }
 
-    pub fn kv(&self) -> &impl KeyValueStore {
-        &self.kv
+    pub fn kv(&self) -> &dyn KeyValueStore {
+        self.kv.as_ref()
     }
 
-    pub fn msg(&self) -> &impl MessageBroker {
-        &self.msg
+    pub fn msg(&self) -> &dyn MessageBroker {
+        self.msg.as_ref()
     }
 
-    pub fn raw(&self) -> &impl RawCapability {
-        &self.raw
+    pub fn raw(&self) -> &dyn RawCapability {
+        self.raw.as_ref()
     }
 
     pub fn log(&self, msg: &str) {
