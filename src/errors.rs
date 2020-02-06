@@ -38,6 +38,7 @@ pub enum ErrorKind {
     JsonMarshaling(serde_json::Error),
     HostError(String),
     BadDispatch(String),
+    WapcError(wapc::errors::Error)
 }
 
 impl Error {
@@ -63,6 +64,7 @@ impl StdError for Error {
             ErrorKind::UTF8Str(_) => "UTF8 encoding failure",
             ErrorKind::HostError(_) => "Host Error",
             ErrorKind::BadDispatch(_) => "Bad dispatch",
+            ErrorKind::WapcError(_) => "waPC failure",
         }
     }
 
@@ -78,6 +80,7 @@ impl StdError for Error {
             ErrorKind::UTF8Str(ref e) => Some(e),
             ErrorKind::HostError(_) => None,
             ErrorKind::BadDispatch(_) => None,
+            ErrorKind::WapcError(ref e) => Some(e),
         }
     }
 }
@@ -95,7 +98,14 @@ impl fmt::Display for Error {
             ErrorKind::UTF8Str(ref e) => write!(f, "UTF8 error: {}", e),
             ErrorKind::HostError(ref e) => write!(f, "Host error: {}", e),
             ErrorKind::BadDispatch(ref e) => write!(f, "Bad dispatch, attempted operation: {}", e),
+            ErrorKind::WapcError(ref e) => write!(f, "waPC error: {}", e),
         }
+    }
+}
+
+impl From<wapc::errors::Error> for Error {
+    fn from(source: wapc::errors::Error) -> Error {
+        new(ErrorKind::WapcError(source))        
     }
 }
 

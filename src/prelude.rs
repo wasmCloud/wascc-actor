@@ -25,4 +25,5 @@ pub use codec::{core, http, keyvalue, messaging};
 use wascc_codec as codec;
 
 pub use crate::wapc::prelude::CallResult;
-pub use crate::wapc::Result;
+pub use crate::ReceiveResult;
+pub use crate::errors;

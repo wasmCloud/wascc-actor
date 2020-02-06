@@ -30,7 +30,7 @@
 //!
 //! actor_receive!(receive);
 //!
-//! pub fn receive(ctx: &CapabilitiesContext, operation: &str, msg: &[u8]) -> CallResult {
+//! pub fn receive(ctx: &CapabilitiesContext, operation: &str, msg: &[u8]) -> ReceiveResult {
 //!     match operation {
 //!         http::OP_HANDLE_REQUEST => hello_world(ctx, msg),
 //!         core::OP_HEALTH_REQUEST => Ok(vec![]),
@@ -40,17 +40,19 @@
 //!
 //! fn hello_world(
 //!    _ctx: &CapabilitiesContext,
-//!    _msg: &[u8]) -> CallResult {
+//!    _msg: &[u8]) -> ReceiveResult {
 //!     Ok(vec![])
 //! }
 //! ```
+
+pub type Result<T> = ::std::result::Result<T, crate::errors::Error>;
+pub type ReceiveResult = ::std::result::Result<Vec<u8>, Box<dyn std::error::Error>>;
 
 pub extern crate prost;
 pub extern crate wapc_guest as wapc;
 use crate::kv::DefaultKeyValueStore;
 use crate::msg::DefaultMessageBroker;
 use crate::raw::DefaultRawCapability;
-use wapc::prelude::*;
 use wapc_guest::console_log;
 
 /// Utility function to easily convert a prost Message into a byte vector
@@ -69,7 +71,7 @@ macro_rules! actor_receive {
         wapc_handler!(handle_wapc);
         fn handle_wapc(operation: &str, msg: &[u8]) -> CallResult {
             let ctx = $crate::CapabilitiesContext::new();
-            $user_handler(&ctx, &operation, msg)
+            $user_handler(&ctx, &operation, msg).map_err(|e| e.into())
         }
     };
 }
@@ -188,3 +190,4 @@ pub mod kv;
 pub mod msg;
 pub mod prelude;
 pub mod raw;
+pub mod errors;

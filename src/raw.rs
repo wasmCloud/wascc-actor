@@ -45,6 +45,6 @@ impl RawCapability for DefaultRawCapability {
     /// if you know the host runtime is carrying a capability provider that can understand
     /// this payload
     fn call(&self, capid: &str, operation: &str, msg: &[u8]) -> Result<Vec<u8>> {
-        host_call(&route(capid, operation), msg)
+        host_call(&route(capid, operation), msg).map_err(|e| e.into())
     }
 }

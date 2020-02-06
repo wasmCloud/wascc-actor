@@ -5,7 +5,7 @@
 
 # WebAssembly Secure Capabilities Connector - Actor SDK
 
-The waSCC Actor SDK is used by Rust developers building cloud-native workloads for the `wasm32-unknown-unknown` target. Using waSCC to host your WebAssembly module frees you of the burden of traditional non-functional requirements and boilerplate typically bogging down our development time. waSCC lets you focus squarely on compiling the business logic in a portable, secure Wasm module.
+The [waSCC Actor SDK](https://wascc.dev) is used by Rust developers building cloud-native workloads for the `wasm32-unknown-unknown` target. Using waSCC to host your WebAssembly module frees you from the burden of manually implementing traditional non-functional requirements and boilerplate that typically bogs down development time. waSCC lets you focus squarely on compiling the business logic in a portable, secure wasm module.
 
 For more documentation, tutorials, and examples, please check out the [wascc](https://wascc.dev) website.
 
@@ -18,7 +18,7 @@ use actor::prelude::*;
 
 actor_receive!(receive);
 
-pub fn receive(ctx: &CapabilitiesContext, operation: &str, msg: &[u8]) -> CallResult {
+pub fn receive(ctx: &CapabilitiesContext, operation: &str, msg: &[u8]) -> ReceiveResult {
     match operation {
         http::OP_HANDLE_REQUEST => hello_world(ctx, msg),
         core::OP_HEALTH_REQUEST => Ok(vec![]),
@@ -28,7 +28,7 @@ pub fn receive(ctx: &CapabilitiesContext, operation: &str, msg: &[u8]) -> CallRe
 
 fn hello_world(
    _ctx: &CapabilitiesContext,
-   _msg: &[u8]) -> CallResult {
+   _msg: &[u8]) -> ReceiveResult {
 
     // Utilize capabilities via the context here
     Ok(vec![])

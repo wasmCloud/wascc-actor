@@ -50,13 +50,13 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
         };
         host_call(&route(CAPID_KEYVALUE, OP_GET), &protobytes(cmd)?).map(|vec| {
-            let resp = GetResponse::decode(&vec).unwrap();
+            let resp = GetResponse::decode(vec.as_ref()).unwrap();
             if resp.exists {
                 Some(resp.value)
             } else {
                 None
             }
-        })
+        }).map_err(|e| e.into())
     }
 
     fn set(&self, key: &str, value: &str, expires: Option<u32>) -> Result<()> {
@@ -65,7 +65,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             value: value.to_string(),
             expires_s: expires.unwrap_or(0) as _,
         };
-        host_call(&route(CAPID_KEYVALUE, OP_SET), &protobytes(cmd)?).map(|_vec| ())
+        host_call(&route(CAPID_KEYVALUE, OP_SET), &protobytes(cmd)?).map(|_vec| ()).map_err(|e| e.into())
     }
 
     fn atomic_add(&self, key: &str, value: i32) -> Result<i32> {
@@ -74,9 +74,9 @@ impl KeyValueStore for DefaultKeyValueStore {
             value,
         };
         host_call(&route(CAPID_KEYVALUE, OP_ADD), &protobytes(cmd)?).map(|vec| {
-            let resp = AddResponse::decode(&vec).unwrap();
+            let resp = AddResponse::decode(vec.as_ref()).unwrap();
             resp.value
-        })
+        }).map_err(|e| e.into())
     }
 
     fn list_add(&self, key: &str, item: &str) -> Result<usize> {
@@ -85,9 +85,9 @@ impl KeyValueStore for DefaultKeyValueStore {
             value: item.to_string(),
         };
         host_call(&route(CAPID_KEYVALUE, OP_PUSH), &protobytes(cmd)?).map(|vec| {
-            let resp = ListResponse::decode(&vec).unwrap();
+            let resp = ListResponse::decode(vec.as_ref()).unwrap();
             resp.new_count as usize
-        })
+        }).map_err(|e| e.into())
     }
 
     fn list_del_item(&self, key: &str, item: &str) -> Result<usize> {
@@ -96,16 +96,16 @@ impl KeyValueStore for DefaultKeyValueStore {
             value: item.to_string(),
         };
         host_call(&route(CAPID_KEYVALUE, OP_LIST_DEL), &protobytes(cmd)?).map(|vec| {
-            let resp = ListResponse::decode(&vec).unwrap();
+            let resp = ListResponse::decode(vec.as_ref()).unwrap();
             resp.new_count as usize
-        })
+        }).map_err(|e| e.into())
     }
 
     fn del_key(&self, key: &str) -> Result<()> {
         let cmd = DelRequest {
             key: key.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_DEL), &protobytes(cmd)?).map(|_vec| ())
+        host_call(&route(CAPID_KEYVALUE, OP_DEL), &protobytes(cmd)?).map(|_vec| ()).map_err(|e| e.into())
     }
 
     fn list_range(&self, key: &str, start: isize, stop_inclusive: isize) -> Result<Vec<String>> {
@@ -115,16 +115,16 @@ impl KeyValueStore for DefaultKeyValueStore {
             stop: stop_inclusive as i32,
         };
         host_call(&route(CAPID_KEYVALUE, OP_RANGE), &protobytes(cmd)?).map(|vec| {
-            let resp = ListRangeResponse::decode(&vec).unwrap();
+            let resp = ListRangeResponse::decode(vec.as_ref()).unwrap();
             resp.values
-        })
+        }).map_err(|e| e.into())
     }
 
     fn list_clear(&self, key: &str) -> Result<()> {
         let cmd = ListClearRequest {
             key: key.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_CLEAR), &protobytes(cmd)?).map(|_vec| ())
+        host_call(&route(CAPID_KEYVALUE, OP_CLEAR), &protobytes(cmd)?).map(|_vec| ()).map_err(|e| e.into())
     }
 
     fn set_add(&self, key: &str, value: &str) -> Result<usize> {
@@ -133,9 +133,9 @@ impl KeyValueStore for DefaultKeyValueStore {
             value: value.to_string(),
         };
         host_call(&route(CAPID_KEYVALUE, OP_SET_ADD), &protobytes(cmd)?).map(|vec| {
-            let resp = SetOperationResponse::decode(&vec).unwrap();
+            let resp = SetOperationResponse::decode(vec.as_ref()).unwrap();
             resp.new_count as usize
-        })
+        }).map_err(|e| e.into())
     }
 
     fn set_remove(&self, key: &str, value: &str) -> Result<usize> {
@@ -144,25 +144,25 @@ impl KeyValueStore for DefaultKeyValueStore {
             value: value.to_string(),
         };
         host_call(&route(CAPID_KEYVALUE, OP_SET_REMOVE), &protobytes(cmd)?).map(|vec| {
-            let resp = SetOperationResponse::decode(&vec).unwrap();
+            let resp = SetOperationResponse::decode(vec.as_ref()).unwrap();
             resp.new_count as usize
-        })
+        }).map_err(|e| e.into())
     }
 
     fn set_union(&self, keys: Vec<String>) -> Result<Vec<String>> {
         let cmd = SetUnionRequest { keys };
         host_call(&route(CAPID_KEYVALUE, OP_SET_UNION), &protobytes(cmd)?).map(|vec| {
-            let resp = SetQueryResponse::decode(&vec).unwrap();
+            let resp = SetQueryResponse::decode(vec.as_ref()).unwrap();
             resp.values
-        })
+        }).map_err(|e| e.into())
     }
 
     fn set_intersect(&self, keys: Vec<String>) -> Result<Vec<String>> {
         let cmd = SetIntersectionRequest { keys };
         host_call(&route(CAPID_KEYVALUE, OP_SET_INTERSECT), &protobytes(cmd)?).map(|vec| {
-            let resp = SetQueryResponse::decode(&vec).unwrap();
+            let resp = SetQueryResponse::decode(vec.as_ref()).unwrap();
             resp.values
-        })
+        }).map_err(|e| e.into())
     }
 
     fn set_members(&self, key: &str) -> Result<Vec<String>> {
@@ -170,9 +170,9 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
         };
         host_call(&route(CAPID_KEYVALUE, OP_SET_QUERY), &protobytes(cmd)?).map(|vec| {
-            let resp = SetQueryResponse::decode(&vec).unwrap();
+            let resp = SetQueryResponse::decode(vec.as_ref()).unwrap();
             resp.values
-        })
+        }).map_err(|e| e.into())
     }
 
     fn exists(&self, key: &str) -> Result<bool> {
@@ -180,8 +180,8 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
         };
         host_call(&route(CAPID_KEYVALUE, OP_KEY_EXISTS), &protobytes(cmd)?).map(|vec| {
-            let resp = GetResponse::decode(&vec).unwrap();
+            let resp = GetResponse::decode(vec.as_ref()).unwrap();
             resp.exists
-        })
+        }).map_err(|e| e.into())
     }
 }
