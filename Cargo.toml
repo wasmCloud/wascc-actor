@@ -15,7 +15,7 @@ categories = ["wasm", "api-bindings"]
 travis-ci = { repository = "wascc/wascc-actor", branch = "master" }
 
 [dependencies]
-wascc-codec = "0.3.4"
+wascc-codec = "0.3.5"
 wapc-guest = "0.1.1"
 prost = "0.6.1"
 serde_json = "1.0.46"
