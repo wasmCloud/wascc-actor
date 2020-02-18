@@ -21,9 +21,9 @@ pub use crate::actor_receive;
 pub use crate::protobytes;
 pub use prost::Message;
 
-pub use codec::{core, http, keyvalue, messaging};
+pub use codec::{blobstore, core, http, keyvalue, messaging};
 use wascc_codec as codec;
 
+pub use crate::errors;
 pub use crate::wapc::prelude::CallResult;
 pub use crate::ReceiveResult;
-pub use crate::errors;

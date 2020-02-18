@@ -5,7 +5,7 @@
 
 # WebAssembly Secure Capabilities Connector - Actor SDK
 
-The [waSCC Actor SDK](https://wascc.dev) is used by Rust developers building cloud-native workloads for the `wasm32-unknown-unknown` target. Using waSCC to host your WebAssembly module frees you from the burden of manually implementing traditional non-functional requirements and boilerplate that typically bogs down development time. waSCC lets you focus squarely on compiling the business logic in a portable, secure wasm module.
+The [waSCC Actor SDK](https://wascc.dev) is used by Rust developers building cloud-native workloads for the `wasm32-unknown-unknown` target. Using waSCC to host your WebAssembly module frees you from the burden of manually implementing traditional non-functional requirements and boilerplate that typically bogs down development time. waSCC lets you focus squarely on compiling the business logic in a portable, secure wasm module that can run anywhere there's a waSCC host.
 
 For more documentation, tutorials, and examples, please check out the [wascc](https://wascc.dev) website.
 

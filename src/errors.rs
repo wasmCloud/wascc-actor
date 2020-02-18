@@ -38,7 +38,7 @@ pub enum ErrorKind {
     JsonMarshaling(serde_json::Error),
     HostError(String),
     BadDispatch(String),
-    WapcError(wapc::errors::Error)
+    WapcError(wapc::errors::Error),
 }
 
 impl Error {
@@ -105,7 +105,7 @@ impl fmt::Display for Error {
 
 impl From<wapc::errors::Error> for Error {
     fn from(source: wapc::errors::Error) -> Error {
-        new(ErrorKind::WapcError(source))        
+        new(ErrorKind::WapcError(source))
     }
 }
 

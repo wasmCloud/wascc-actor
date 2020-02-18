@@ -1,6 +1,6 @@
 [package]
 name = "wascc-actor"
-version = "0.1.2"
+version = "0.2.0"
 authors = ["Kevin Hoffman <alothien@gmail.com>"]
 edition = "2018"
 description = "SDK for developing WebAssembly Actor modules for hosting in waSCC"
@@ -15,10 +15,11 @@ categories = ["wasm", "api-bindings"]
 travis-ci = { repository = "wascc/wascc-actor", branch = "master" }
 
 [dependencies]
-wascc-codec = "0.3.5"
+wascc-codec = "0.4.0"
+#wascc-codec = { path = "../wascc-codec" }
 wapc-guest = "0.1.1"
 prost = "0.6.1"
-serde_json = "1.0.46"
+serde_json = "1.0.48"
 serde_derive = "1.0.104"
 serde = "1.0.104"
 prost-types = "0.6.1"

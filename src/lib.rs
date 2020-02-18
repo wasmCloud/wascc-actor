@@ -52,8 +52,10 @@ pub extern crate prost;
 pub extern crate wapc_guest as wapc;
 use crate::kv::DefaultKeyValueStore;
 use crate::msg::DefaultMessageBroker;
+use crate::objectstore::DefaultObjectStore;
 use crate::raw::DefaultRawCapability;
 use wapc_guest::console_log;
+use wascc_codec::blobstore::{Blob, BlobList, Container, Transfer};
 
 /// Utility function to easily convert a prost Message into a byte vector
 pub fn protobytes(msg: impl prost::Message) -> Result<Vec<u8>> {
@@ -117,6 +119,32 @@ pub trait MessageBroker {
     fn request(&self, subject: &str, payload: &[u8], timeout_ms: u64) -> Result<Vec<u8>>;
 }
 
+pub trait ObjectStore {
+    /// Creates a new container
+    fn create_container(&self, name: &str) -> Result<Container>;
+
+    /// Removes a container
+    fn remove_container(&self, name: &str) -> Result<()>;
+
+    /// Removes an object from a container
+    fn remove_object(&self, id: &str, container: &str) -> Result<()>;
+
+    /// Lists objects in a container
+    fn list_objects(&self, container: &str) -> Result<BlobList>;
+
+    /// Gets information for a single object
+    fn get_blob_info(&self, container: &str, id: &str) -> Result<Option<Blob>>;
+
+    /// Starts an upload to the object store
+    fn start_upload(&self, blob: &Blob, chunk_size: u64, total_bytes: u64) -> Result<Transfer>;
+
+    /// Uploads one chunk of a blob (max size determined by blob store capability provider)
+    fn upload_chunk(&self, transfer: &Transfer, offset: u64, bytes: &[u8]) -> Result<()>;
+
+    /// Requests a download of a blob, actor will begin receiving OP_RECEIVE_CHUNK messages
+    fn start_download(&self, blob: &Blob, chunk_size: u64) -> Result<Transfer>;
+}
+
 /// A loosely typed, opaque client consuming a capability provider in the host runtime
 pub trait RawCapability {
     fn call(&self, capid: &str, operation: &str, msg: &[u8]) -> Result<Vec<u8>>;
@@ -129,6 +157,7 @@ pub struct CapabilitiesContext {
     kv: Box<dyn KeyValueStore>,
     msg: Box<dyn MessageBroker>,
     raw: Box<dyn RawCapability>,
+    blob: Box<dyn ObjectStore>,
 }
 
 impl Default for CapabilitiesContext {
@@ -137,6 +166,7 @@ impl Default for CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),
             raw: Box::new(DefaultRawCapability::new()),
+            blob: Box::new(DefaultObjectStore::new()),
         }
     }
 }
@@ -148,6 +178,7 @@ impl CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),
             raw: Box::new(DefaultRawCapability::new()),
+            blob: Box::new(DefaultObjectStore::new()),
         }
     }
 
@@ -157,11 +188,13 @@ impl CapabilitiesContext {
         kv: impl KeyValueStore + 'static,
         msg: impl MessageBroker + 'static,
         raw: impl RawCapability + 'static,
+        blob: impl ObjectStore + 'static,
     ) -> Self {
         CapabilitiesContext {
             kv: Box::new(kv),
             msg: Box::new(msg),
             raw: Box::new(raw),
+            blob: Box::new(blob),
         }
     }
 
@@ -177,6 +210,10 @@ impl CapabilitiesContext {
         self.raw.as_ref()
     }
 
+    pub fn objectstore(&self) -> &dyn ObjectStore {
+        self.blob.as_ref()
+    }
+
     pub fn log(&self, msg: &str) {
         console_log(msg);
     }
@@ -186,8 +223,9 @@ pub(crate) fn route(capid: &str, op: &str) -> String {
     format!("{}!{}", capid, op)
 }
 
+pub mod errors;
 pub mod kv;
 pub mod msg;
+pub mod objectstore;
 pub mod prelude;
 pub mod raw;
-pub mod errors;

@@ -59,7 +59,8 @@ impl MessageBroker for DefaultMessageBroker {
         host_call(
             &route(CAPID_MESSAGING, OP_PUBLISH_MESSAGE),
             &protobytes(cmd)?,
-        ).map_err(|e| e.into())
+        )
+        .map_err(|e| e.into())
         .map(|_vec| ())
     }
 
@@ -75,6 +76,7 @@ impl MessageBroker for DefaultMessageBroker {
         host_call(
             &route(CAPID_MESSAGING, OP_PERFORM_REQUEST),
             &protobytes(cmd)?,
-        ).map_err(|e| e.into())
+        )
+        .map_err(|e| e.into())
     }
 }
