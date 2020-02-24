@@ -54,6 +54,7 @@ use crate::kv::DefaultKeyValueStore;
 use crate::msg::DefaultMessageBroker;
 use crate::objectstore::DefaultObjectStore;
 use crate::raw::DefaultRawCapability;
+use extras::DefaultExtras;
 use wapc_guest::console_log;
 use wascc_codec::blobstore::{Blob, BlobList, Container, Transfer};
 
@@ -110,6 +111,17 @@ pub trait KeyValueStore {
     fn exists(&self, key: &str) -> Result<bool>;
 }
 
+/// Miscellaneous utilities that are often needed regardless of capability providers
+pub trait Extras {
+    /// Obtains a random number using the host's random number generator
+    fn get_random(&self, min: u32, max: u32) -> Result<u32>;
+    /// Obtains a string version of a v4 GUID
+    fn get_guid(&self) -> Result<String>;
+    /// Obtains a monotonically increasing sequence number. This number is only unique
+    /// _per host_, and not globally unique.
+    fn get_sequence_number(&self) -> Result<u64>;
+}
+
 /// Represents an abstraction around a client consuming a message broker provided by the host
 pub trait MessageBroker {
     /// Publishes a new message on the given subject with an optional reply-to
@@ -158,6 +170,7 @@ pub struct CapabilitiesContext {
     msg: Box<dyn MessageBroker>,
     raw: Box<dyn RawCapability>,
     blob: Box<dyn ObjectStore>,
+    extras: Box<dyn Extras>,
 }
 
 impl Default for CapabilitiesContext {
@@ -167,6 +180,7 @@ impl Default for CapabilitiesContext {
             msg: Box::new(DefaultMessageBroker::new()),
             raw: Box::new(DefaultRawCapability::new()),
             blob: Box::new(DefaultObjectStore::new()),
+            extras: Box::new(DefaultExtras::new()),
         }
     }
 }
@@ -179,6 +193,7 @@ impl CapabilitiesContext {
             msg: Box::new(DefaultMessageBroker::new()),
             raw: Box::new(DefaultRawCapability::new()),
             blob: Box::new(DefaultObjectStore::new()),
+            extras: Box::new(DefaultExtras::new()),
         }
     }
 
@@ -189,12 +204,14 @@ impl CapabilitiesContext {
         msg: impl MessageBroker + 'static,
         raw: impl RawCapability + 'static,
         blob: impl ObjectStore + 'static,
+        extras: impl Extras + 'static,
     ) -> Self {
         CapabilitiesContext {
             kv: Box::new(kv),
             msg: Box::new(msg),
             raw: Box::new(raw),
             blob: Box::new(blob),
+            extras: Box::new(extras),
         }
     }
 
@@ -214,6 +231,10 @@ impl CapabilitiesContext {
         self.blob.as_ref()
     }
 
+    pub fn extras(&self) -> &dyn Extras {
+        self.extras.as_ref()
+    }
+
     pub fn log(&self, msg: &str) {
         console_log(msg);
     }
@@ -224,6 +245,7 @@ pub(crate) fn route(capid: &str, op: &str) -> String {
 }
 
 pub mod errors;
+pub mod extras;
 pub mod kv;
 pub mod msg;
 pub mod objectstore;
