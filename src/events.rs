@@ -46,7 +46,7 @@ impl EventStreams for DefaultEventStreams {
             range: None,
             stream_id: stream.to_string(),
         };
-        host_call(&route(CAPID_EVENTS, OP_WRITE_EVENT), &protobytes(query)?)
+        host_call(&route(CAPID_EVENTS, OP_QUERY_STREAM), &protobytes(query)?)
             .map(|v| StreamResults::decode(v.as_ref()).unwrap().events.clone())
             .map_err(|e| e.into())
     }
