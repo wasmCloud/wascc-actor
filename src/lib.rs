@@ -54,9 +54,12 @@ use crate::kv::DefaultKeyValueStore;
 use crate::msg::DefaultMessageBroker;
 use crate::objectstore::DefaultObjectStore;
 use crate::raw::DefaultRawCapability;
+use events::DefaultEventStreams;
 use extras::DefaultExtras;
+use std::collections::HashMap;
 use wapc_guest::console_log;
 use wascc_codec::blobstore::{Blob, BlobList, Container, Transfer};
+use wascc_codec::eventstreams::Event;
 
 /// Utility function to easily convert a prost Message into a byte vector
 pub fn protobytes(msg: impl prost::Message) -> Result<Vec<u8>> {
@@ -122,6 +125,15 @@ pub trait Extras {
     fn get_sequence_number(&self) -> Result<u64>;
 }
 
+/// Interaction with append-only event streams. This API is not yet mature and is missing functionality.
+pub trait EventStreams {
+    /// Writes an event to the stream and, if successful, returns a string containing the new event's unique ID
+    fn write_event(&self, stream: &str, values: HashMap<String, String>) -> Result<String>;
+
+    /// Reads all of the events from a stream
+    fn read_all(&self, stream: &str) -> Result<Vec<Event>>;
+}
+
 /// Represents an abstraction around a client consuming a message broker provided by the host
 pub trait MessageBroker {
     /// Publishes a new message on the given subject with an optional reply-to
@@ -171,6 +183,7 @@ pub struct CapabilitiesContext {
     raw: Box<dyn RawCapability>,
     blob: Box<dyn ObjectStore>,
     extras: Box<dyn Extras>,
+    events: Box<dyn EventStreams>,
 }
 
 impl Default for CapabilitiesContext {
@@ -181,6 +194,7 @@ impl Default for CapabilitiesContext {
             raw: Box::new(DefaultRawCapability::new()),
             blob: Box::new(DefaultObjectStore::new()),
             extras: Box::new(DefaultExtras::new()),
+            events: Box::new(DefaultEventStreams::new()),
         }
     }
 }
@@ -194,6 +208,7 @@ impl CapabilitiesContext {
             raw: Box::new(DefaultRawCapability::new()),
             blob: Box::new(DefaultObjectStore::new()),
             extras: Box::new(DefaultExtras::new()),
+            events: Box::new(DefaultEventStreams::new()),
         }
     }
 
@@ -205,6 +220,7 @@ impl CapabilitiesContext {
         raw: impl RawCapability + 'static,
         blob: impl ObjectStore + 'static,
         extras: impl Extras + 'static,
+        events: impl EventStreams + 'static,
     ) -> Self {
         CapabilitiesContext {
             kv: Box::new(kv),
@@ -212,6 +228,7 @@ impl CapabilitiesContext {
             raw: Box::new(raw),
             blob: Box::new(blob),
             extras: Box::new(extras),
+            events: Box::new(events),
         }
     }
 
@@ -235,6 +252,10 @@ impl CapabilitiesContext {
         self.extras.as_ref()
     }
 
+    pub fn events(&self) -> &dyn EventStreams {
+        self.events.as_ref()
+    }
+
     pub fn log(&self, msg: &str) {
         console_log(msg);
     }
@@ -245,6 +266,7 @@ pub(crate) fn route(capid: &str, op: &str) -> String {
 }
 
 pub mod errors;
+pub mod events;
 pub mod extras;
 pub mod kv;
 pub mod msg;
