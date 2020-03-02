@@ -1,4 +1,4 @@
-use crate::{protobytes, route, Extras};
+use crate::{protobytes, Extras};
 use prost::Message;
 use wapc_guest::host_call;
 use wascc_codec::extras::*;
@@ -28,7 +28,7 @@ impl Extras for DefaultExtras {
             gentype: GeneratorType::Random as i32,
         };
 
-        host_call(&route(CAPID_EXTRAS, OP_REQUEST_RANDOM), &protobytes(cmd)?)
+        host_call(CAPID_EXTRAS, OP_REQUEST_RANDOM, &protobytes(cmd)?)
             .map(|v| GeneratorResult::decode(v.as_ref()).unwrap())
             .map(|r| match r.value.unwrap() {
                 generator_result::Value::RandomNo(n) => n,
@@ -43,7 +43,7 @@ impl Extras for DefaultExtras {
             max: 0,
             gentype: GeneratorType::Guid as i32,
         };
-        host_call(&route(CAPID_EXTRAS, OP_REQUEST_GUID), &protobytes(cmd)?)
+        host_call(CAPID_EXTRAS, OP_REQUEST_GUID, &protobytes(cmd)?)
             .map(|v| GeneratorResult::decode(v.as_ref()).unwrap())
             .map(|r| match r.value.unwrap() {
                 generator_result::Value::Guid(g) => g,
@@ -58,7 +58,7 @@ impl Extras for DefaultExtras {
             max: 0,
             gentype: GeneratorType::Sequence as i32,
         };
-        host_call(&route(CAPID_EXTRAS, OP_REQUEST_SEQUENCE), &protobytes(cmd)?)
+        host_call(CAPID_EXTRAS, OP_REQUEST_SEQUENCE, &protobytes(cmd)?)
             .map(|v| GeneratorResult::decode(v.as_ref()).unwrap())
             .map(|r| match r.value.unwrap() {
                 generator_result::Value::SequenceNo(n) => n,

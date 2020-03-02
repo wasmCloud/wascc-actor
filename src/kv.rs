@@ -18,7 +18,6 @@
 //! the currently bound `wascap:keyvalue` capability provider
 
 use crate::protobytes;
-use crate::route;
 use crate::KeyValueStore;
 use crate::Result;
 use codec::keyvalue::*;
@@ -49,7 +48,7 @@ impl KeyValueStore for DefaultKeyValueStore {
         let cmd = GetRequest {
             key: key.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_GET), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_GET, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = GetResponse::decode(vec.as_ref()).unwrap();
                 if resp.exists {
@@ -67,7 +66,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             value: value.to_string(),
             expires_s: expires.unwrap_or(0) as _,
         };
-        host_call(&route(CAPID_KEYVALUE, OP_SET), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_SET, &protobytes(cmd)?)
             .map(|_vec| ())
             .map_err(|e| e.into())
     }
@@ -77,7 +76,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
             value,
         };
-        host_call(&route(CAPID_KEYVALUE, OP_ADD), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_ADD, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = AddResponse::decode(vec.as_ref()).unwrap();
                 resp.value
@@ -90,7 +89,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
             value: item.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_PUSH), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_PUSH, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = ListResponse::decode(vec.as_ref()).unwrap();
                 resp.new_count as usize
@@ -103,7 +102,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
             value: item.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_LIST_DEL), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_LIST_DEL, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = ListResponse::decode(vec.as_ref()).unwrap();
                 resp.new_count as usize
@@ -115,7 +114,7 @@ impl KeyValueStore for DefaultKeyValueStore {
         let cmd = DelRequest {
             key: key.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_DEL), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_DEL, &protobytes(cmd)?)
             .map(|_vec| ())
             .map_err(|e| e.into())
     }
@@ -126,7 +125,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             start: start as i32,
             stop: stop_inclusive as i32,
         };
-        host_call(&route(CAPID_KEYVALUE, OP_RANGE), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_RANGE, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = ListRangeResponse::decode(vec.as_ref()).unwrap();
                 resp.values
@@ -138,7 +137,7 @@ impl KeyValueStore for DefaultKeyValueStore {
         let cmd = ListClearRequest {
             key: key.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_CLEAR), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_CLEAR, &protobytes(cmd)?)
             .map(|_vec| ())
             .map_err(|e| e.into())
     }
@@ -148,7 +147,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
             value: value.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_SET_ADD), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_SET_ADD, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = SetOperationResponse::decode(vec.as_ref()).unwrap();
                 resp.new_count as usize
@@ -161,7 +160,7 @@ impl KeyValueStore for DefaultKeyValueStore {
             key: key.to_string(),
             value: value.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_SET_REMOVE), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_SET_REMOVE, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = SetOperationResponse::decode(vec.as_ref()).unwrap();
                 resp.new_count as usize
@@ -171,7 +170,7 @@ impl KeyValueStore for DefaultKeyValueStore {
 
     fn set_union(&self, keys: Vec<String>) -> Result<Vec<String>> {
         let cmd = SetUnionRequest { keys };
-        host_call(&route(CAPID_KEYVALUE, OP_SET_UNION), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_SET_UNION, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = SetQueryResponse::decode(vec.as_ref()).unwrap();
                 resp.values
@@ -181,7 +180,7 @@ impl KeyValueStore for DefaultKeyValueStore {
 
     fn set_intersect(&self, keys: Vec<String>) -> Result<Vec<String>> {
         let cmd = SetIntersectionRequest { keys };
-        host_call(&route(CAPID_KEYVALUE, OP_SET_INTERSECT), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_SET_INTERSECT, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = SetQueryResponse::decode(vec.as_ref()).unwrap();
                 resp.values
@@ -193,7 +192,7 @@ impl KeyValueStore for DefaultKeyValueStore {
         let cmd = SetQueryRequest {
             key: key.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_SET_QUERY), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_SET_QUERY, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = SetQueryResponse::decode(vec.as_ref()).unwrap();
                 resp.values
@@ -205,7 +204,7 @@ impl KeyValueStore for DefaultKeyValueStore {
         let cmd = KeyExistsQuery {
             key: key.to_string(),
         };
-        host_call(&route(CAPID_KEYVALUE, OP_KEY_EXISTS), &protobytes(cmd)?)
+        host_call(CAPID_KEYVALUE, OP_KEY_EXISTS, &protobytes(cmd)?)
             .map(|vec| {
                 let resp = GetResponse::decode(vec.as_ref()).unwrap();
                 resp.exists

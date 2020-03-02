@@ -261,10 +261,6 @@ impl CapabilitiesContext {
     }
 }
 
-pub(crate) fn route(capid: &str, op: &str) -> String {
-    format!("{}!{}", capid, op)
-}
-
 pub mod errors;
 pub mod events;
 pub mod extras;

@@ -1,5 +1,5 @@
 use crate::Result;
-use crate::{protobytes, route, EventStreams};
+use crate::{protobytes, EventStreams};
 use prost::Message;
 use std::collections::HashMap;
 use wapc_guest::host_call;
@@ -30,7 +30,7 @@ impl EventStreams for DefaultEventStreams {
             values,
         };
 
-        host_call(&route(CAPID_EVENTS, OP_WRITE_EVENT), &protobytes(ev)?)
+        host_call(CAPID_EVENTS, OP_WRITE_EVENT, &protobytes(ev)?)
             .map(|v| {
                 WriteResponse::decode(v.as_ref())
                     .unwrap()
@@ -46,7 +46,7 @@ impl EventStreams for DefaultEventStreams {
             range: None,
             stream_id: stream.to_string(),
         };
-        host_call(&route(CAPID_EVENTS, OP_QUERY_STREAM), &protobytes(query)?)
+        host_call(CAPID_EVENTS, OP_QUERY_STREAM, &protobytes(query)?)
             .map(|v| StreamResults::decode(v.as_ref()).unwrap().events.clone())
             .map_err(|e| e.into())
     }

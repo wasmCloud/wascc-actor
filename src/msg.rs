@@ -18,7 +18,6 @@
 //! the currently bound `wascc:messaging` capability provider
 
 use crate::protobytes;
-use crate::route;
 use crate::MessageBroker;
 use wapc_guest::host_call;
 
@@ -56,12 +55,9 @@ impl MessageBroker for DefaultMessageBroker {
             }),
         };
 
-        host_call(
-            &route(CAPID_MESSAGING, OP_PUBLISH_MESSAGE),
-            &protobytes(cmd)?,
-        )
-        .map_err(|e| e.into())
-        .map(|_vec| ())
+        host_call(CAPID_MESSAGING, OP_PUBLISH_MESSAGE, &protobytes(cmd)?)
+            .map_err(|e| e.into())
+            .map(|_vec| ())
     }
 
     fn request(&self, subject: &str, payload: &[u8], timeout_ms: u64) -> Result<Vec<u8>> {
@@ -73,10 +69,6 @@ impl MessageBroker for DefaultMessageBroker {
 
         // The broker plugin applies no wrapper around the response from the broker, the
         // raw payload is delivered.
-        host_call(
-            &route(CAPID_MESSAGING, OP_PERFORM_REQUEST),
-            &protobytes(cmd)?,
-        )
-        .map_err(|e| e.into())
+        host_call(CAPID_MESSAGING, OP_PERFORM_REQUEST, &protobytes(cmd)?).map_err(|e| e.into())
     }
 }

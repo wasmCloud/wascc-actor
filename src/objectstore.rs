@@ -1,4 +1,4 @@
-use crate::{protobytes, route, ObjectStore, Result};
+use crate::{protobytes, ObjectStore, Result};
 use prost::Message;
 use wapc_guest::host_call;
 use wascc_codec::blobstore::Blob;
@@ -27,24 +27,18 @@ impl ObjectStore for DefaultObjectStore {
         let cmd = Container {
             id: name.to_string(),
         };
-        host_call(
-            &route(CAPID_BLOBSTORE, OP_CREATE_CONTAINER),
-            &protobytes(cmd)?,
-        )
-        .map(|v| Container::decode(v.as_ref()).unwrap())
-        .map_err(|e| e.into())
+        host_call(CAPID_BLOBSTORE, OP_CREATE_CONTAINER, &protobytes(cmd)?)
+            .map(|v| Container::decode(v.as_ref()).unwrap())
+            .map_err(|e| e.into())
     }
 
     fn remove_container(&self, name: &str) -> Result<()> {
         let cmd = Container {
             id: name.to_string(),
         };
-        host_call(
-            &route(CAPID_BLOBSTORE, OP_REMOVE_CONTAINER),
-            &protobytes(cmd)?,
-        )
-        .map(|_v| ())
-        .map_err(|e| e.into())
+        host_call(CAPID_BLOBSTORE, OP_REMOVE_CONTAINER, &protobytes(cmd)?)
+            .map(|_v| ())
+            .map_err(|e| e.into())
     }
 
     fn remove_object(&self, name: &str, container: &str) -> crate::Result<()> {
@@ -53,7 +47,7 @@ impl ObjectStore for DefaultObjectStore {
             container: container.to_string(),
             byte_size: 0,
         };
-        host_call(&route(CAPID_BLOBSTORE, OP_REMOVE_OBJECT), &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_REMOVE_OBJECT, &protobytes(cmd)?)
             .map(|_v| ())
             .map_err(|e| e.into())
     }
@@ -62,7 +56,7 @@ impl ObjectStore for DefaultObjectStore {
         let cmd = Container {
             id: container.to_string(),
         };
-        host_call(&route(CAPID_BLOBSTORE, OP_LIST_OBJECTS), &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_LIST_OBJECTS, &protobytes(cmd)?)
             .map(|v| BlobList::decode(v.as_ref()).unwrap())
             .map_err(|e| e.into())
     }
@@ -73,19 +67,16 @@ impl ObjectStore for DefaultObjectStore {
             container: container.to_string(),
             byte_size: 0,
         };
-        host_call(
-            &route(CAPID_BLOBSTORE, OP_GET_OBJECT_INFO),
-            &protobytes(cmd)?,
-        )
-        .map(|v| {
-            let b = Blob::decode(v.as_ref()).unwrap();
-            if b.id.is_empty() {
-                None
-            } else {
-                Some(b)
-            }
-        })
-        .map_err(|e| e.into())
+        host_call(CAPID_BLOBSTORE, OP_GET_OBJECT_INFO, &protobytes(cmd)?)
+            .map(|v| {
+                let b = Blob::decode(v.as_ref()).unwrap();
+                if b.id.is_empty() {
+                    None
+                } else {
+                    Some(b)
+                }
+            })
+            .map_err(|e| e.into())
     }
 
     fn start_upload(&self, blob: &Blob, chunk_size: u64, total_bytes: u64) -> Result<Transfer> {
@@ -104,7 +95,7 @@ impl ObjectStore for DefaultObjectStore {
             total_bytes,
             chunk_bytes: vec![],
         };
-        host_call(&route(CAPID_BLOBSTORE, OP_START_UPLOAD), &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_START_UPLOAD, &protobytes(cmd)?)
             .map(|_v| transfer)
             .map_err(|e| e.into())
     }
@@ -118,7 +109,7 @@ impl ObjectStore for DefaultObjectStore {
             total_bytes: transfer.total_size,
             chunk_bytes: bytes.to_vec(),
         };
-        host_call(&route(CAPID_BLOBSTORE, OP_UPLOAD_CHUNK), &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_UPLOAD_CHUNK, &protobytes(cmd)?)
             .map(|_v| ())
             .map_err(|e| e.into())
     }
@@ -136,11 +127,8 @@ impl ObjectStore for DefaultObjectStore {
             id: blob.id.to_string(),
             chunk_size,
         };
-        host_call(
-            &route(CAPID_BLOBSTORE, OP_START_DOWNLOAD),
-            &protobytes(cmd)?,
-        )
-        .map(|_v| transfer)
-        .map_err(|e| e.into())
+        host_call(CAPID_BLOBSTORE, OP_START_DOWNLOAD, &protobytes(cmd)?)
+            .map(|_v| transfer)
+            .map_err(|e| e.into())
     }
 }

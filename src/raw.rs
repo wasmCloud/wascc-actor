@@ -20,7 +20,6 @@
 //! wrapper crate that depends on this one and provide a strongly-typed layer around the raw call for
 //! a better developer experience
 
-use crate::route;
 use crate::RawCapability;
 use crate::Result;
 use wapc_guest::host_call;
@@ -45,6 +44,6 @@ impl RawCapability for DefaultRawCapability {
     /// if you know the host runtime is carrying a capability provider that can understand
     /// this payload
     fn call(&self, capid: &str, operation: &str, msg: &[u8]) -> Result<Vec<u8>> {
-        host_call(&route(capid, operation), msg).map_err(|e| e.into())
+        host_call(capid, operation, msg).map_err(|e| e.into())
     }
 }
