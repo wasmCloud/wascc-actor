@@ -1,5 +1,4 @@
-use crate::{protobytes, ObjectStore, Result};
-use prost::Message;
+use crate::{ObjectStore, Result};
 use wapc_guest::host_call;
 use wascc_codec::blobstore::Blob;
 use wascc_codec::blobstore::Container;
@@ -8,6 +7,7 @@ use wascc_codec::blobstore::{
     OP_CREATE_CONTAINER, OP_GET_OBJECT_INFO, OP_LIST_OBJECTS, OP_REMOVE_CONTAINER,
     OP_REMOVE_OBJECT, OP_START_DOWNLOAD, OP_START_UPLOAD, OP_UPLOAD_CHUNK,
 };
+use wascc_codec::{deserialize, serialize};
 
 /// The reserved capability ID for a key/value store. Used for call routing in the host runtime.
 pub const CAPID_BLOBSTORE: &str = "wascc:blobstore";
@@ -27,8 +27,8 @@ impl ObjectStore for DefaultObjectStore {
         let cmd = Container {
             id: name.to_string(),
         };
-        host_call(CAPID_BLOBSTORE, OP_CREATE_CONTAINER, &protobytes(cmd)?)
-            .map(|v| Container::decode(v.as_ref()).unwrap())
+        host_call(CAPID_BLOBSTORE, OP_CREATE_CONTAINER, &serialize(cmd)?)
+            .map(|v| deserialize::<Container>(v.as_ref()).unwrap())
             .map_err(|e| e.into())
     }
 
@@ -36,7 +36,7 @@ impl ObjectStore for DefaultObjectStore {
         let cmd = Container {
             id: name.to_string(),
         };
-        host_call(CAPID_BLOBSTORE, OP_REMOVE_CONTAINER, &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_REMOVE_CONTAINER, &serialize(cmd)?)
             .map(|_v| ())
             .map_err(|e| e.into())
     }
@@ -47,7 +47,7 @@ impl ObjectStore for DefaultObjectStore {
             container: container.to_string(),
             byte_size: 0,
         };
-        host_call(CAPID_BLOBSTORE, OP_REMOVE_OBJECT, &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_REMOVE_OBJECT, &serialize(cmd)?)
             .map(|_v| ())
             .map_err(|e| e.into())
     }
@@ -56,8 +56,8 @@ impl ObjectStore for DefaultObjectStore {
         let cmd = Container {
             id: container.to_string(),
         };
-        host_call(CAPID_BLOBSTORE, OP_LIST_OBJECTS, &protobytes(cmd)?)
-            .map(|v| BlobList::decode(v.as_ref()).unwrap())
+        host_call(CAPID_BLOBSTORE, OP_LIST_OBJECTS, &serialize(cmd)?)
+            .map(|v| deserialize::<BlobList>(v.as_ref()).unwrap())
             .map_err(|e| e.into())
     }
 
@@ -67,9 +67,9 @@ impl ObjectStore for DefaultObjectStore {
             container: container.to_string(),
             byte_size: 0,
         };
-        host_call(CAPID_BLOBSTORE, OP_GET_OBJECT_INFO, &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_GET_OBJECT_INFO, &serialize(cmd)?)
             .map(|v| {
-                let b = Blob::decode(v.as_ref()).unwrap();
+                let b = deserialize::<Blob>(v.as_ref()).unwrap();
                 if b.id.is_empty() {
                     None
                 } else {
@@ -95,7 +95,7 @@ impl ObjectStore for DefaultObjectStore {
             total_bytes,
             chunk_bytes: vec![],
         };
-        host_call(CAPID_BLOBSTORE, OP_START_UPLOAD, &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_START_UPLOAD, &serialize(cmd)?)
             .map(|_v| transfer)
             .map_err(|e| e.into())
     }
@@ -109,7 +109,7 @@ impl ObjectStore for DefaultObjectStore {
             total_bytes: transfer.total_size,
             chunk_bytes: bytes.to_vec(),
         };
-        host_call(CAPID_BLOBSTORE, OP_UPLOAD_CHUNK, &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_UPLOAD_CHUNK, &serialize(cmd)?)
             .map(|_v| ())
             .map_err(|e| e.into())
     }
@@ -127,7 +127,7 @@ impl ObjectStore for DefaultObjectStore {
             id: blob.id.to_string(),
             chunk_size,
         };
-        host_call(CAPID_BLOBSTORE, OP_START_DOWNLOAD, &protobytes(cmd)?)
+        host_call(CAPID_BLOBSTORE, OP_START_DOWNLOAD, &serialize(cmd)?)
             .map(|_v| transfer)
             .map_err(|e| e.into())
     }
