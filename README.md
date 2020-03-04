@@ -16,21 +16,18 @@ extern crate wascc_actor as actor;
 
 use actor::prelude::*;
 
-actor_receive!(receive);
-
-pub fn receive(ctx: &CapabilitiesContext, operation: &str, msg: &[u8]) -> ReceiveResult {
-    match operation {
-        http::OP_HANDLE_REQUEST => hello_world(ctx, msg),
-        core::OP_HEALTH_REQUEST => Ok(vec![]),
-        _ => Err("bad dispatch".into()),
-    }     
-}
+actor_handlers!{ http::OP_HANDLE_REQUEST => hello_world, 
+                 core::OP_HEALTH_REQUEST => health }
 
 fn hello_world(
    _ctx: &CapabilitiesContext,
-   _msg: &[u8]) -> ReceiveResult {
+   _req: http::Request) -> ReceiveResult {
 
     // Utilize capabilities via the context here
+    Ok(vec![])
+}
+
+fn health(_ctx: &CapabilitiesContext, _req: core::HealthRequest) -> ReceiveResult { 
     Ok(vec![])
 }
 ```
