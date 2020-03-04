@@ -28,27 +28,20 @@
 //!
 //! use actor::prelude::*;
 //!
-//! actor_receive!(receive);
+//! actor_handlers!{ http::OP_HANDLE_REQUEST => hello_world, core::OP_HEALTH_REQUEST => health }
 //!
-//! pub fn receive(ctx: &CapabilitiesContext, operation: &str, msg: &[u8]) -> ReceiveResult {
-//!     match operation {
-//!         http::OP_HANDLE_REQUEST => hello_world(ctx, msg),
-//!         core::OP_HEALTH_REQUEST => Ok(vec![]),
-//!         _ => Err("bad dispatch".into()),
-//!     }     
+//! pub fn hello_world(ctx: &CapabilitiesContext, _req: http::Request) -> ReceiveResult {
+//!   Ok(vec![])
 //! }
 //!
-//! fn hello_world(
-//!    _ctx: &CapabilitiesContext,
-//!    _msg: &[u8]) -> ReceiveResult {
-//!     Ok(vec![])
+//! pub fn health(ctx: &CapabilitiesContext, _req: core::HealthRequest) -> ReceiveResult {
+//!   Ok(vec![])
 //! }
 //! ```
 
 pub type Result<T> = ::std::result::Result<T, crate::errors::Error>;
 pub type ReceiveResult = ::std::result::Result<Vec<u8>, Box<dyn std::error::Error>>;
 
-pub extern crate prost;
 pub extern crate wapc_guest as wapc;
 use crate::kv::DefaultKeyValueStore;
 use crate::msg::DefaultMessageBroker;
@@ -61,26 +54,23 @@ use wapc_guest::console_log;
 use wascc_codec::blobstore::{Blob, BlobList, Container, Transfer};
 use wascc_codec::eventstreams::Event;
 
-/// Utility function to easily convert a prost Message into a byte vector
-pub fn protobytes(msg: impl prost::Message) -> Result<Vec<u8>> {
-    let mut buf = Vec::new();
-    msg.encode(&mut buf)?;
-    Ok(buf)
-}
-
-/// Actor developers will use this macro to set up their central receive function
+/// Actor developers will use this macro to set up their operation handlers
 #[macro_export]
-macro_rules! actor_receive {
-    ($user_handler:ident) => {
+macro_rules! actor_handlers(
+    { $($key:path => $user_handler:ident),* } => {
         use $crate::wapc::prelude::*;
 
         wapc_handler!(handle_wapc);
         fn handle_wapc(operation: &str, msg: &[u8]) -> CallResult {
             let ctx = $crate::CapabilitiesContext::new();
-            $user_handler(&ctx, &operation, msg).map_err(|e| e.into())
+            match operation {
+                $( $key => $user_handler(&ctx, deserialize(msg)?).map_err(|e| e.into()), )*
+                _ => Err("bad dispatch".into())
+            }
         }
-    };
-}
+
+     };
+);
 
 /// Represents an abstraction around a client consuming a Key-Value store provided by the host
 pub trait KeyValueStore {

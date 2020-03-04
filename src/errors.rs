@@ -30,11 +30,10 @@ pub(crate) fn new(kind: ErrorKind) -> Error {
 pub enum ErrorKind {
     KeyValueError(String),
     MessagingError(String),
+    MiscError(Box<dyn ::std::error::Error>),
     EnvVar(std::env::VarError),
     UTF8(std::string::FromUtf8Error),
     UTF8Str(std::str::Utf8Error),
-    ProtobufEncoding(prost::EncodeError),
-    ProtobufDecoding(prost::DecodeError),
     JsonMarshaling(serde_json::Error),
     HostError(String),
     BadDispatch(String),
@@ -56,8 +55,6 @@ impl StdError for Error {
         match *self.0 {
             ErrorKind::KeyValueError(_) => "Key/value store error",
             ErrorKind::UTF8(_) => "UTF8 encoding failure",
-            ErrorKind::ProtobufEncoding(_) => "Protobuf encoding failure",
-            ErrorKind::ProtobufDecoding(_) => "Protobuf decoding failure",
             ErrorKind::MessagingError(_) => "Messaging error",
             ErrorKind::EnvVar(_) => "Environment variable error",
             ErrorKind::JsonMarshaling(_) => "JSON encoding/decoding failure",
@@ -65,6 +62,7 @@ impl StdError for Error {
             ErrorKind::HostError(_) => "Host Error",
             ErrorKind::BadDispatch(_) => "Bad dispatch",
             ErrorKind::WapcError(_) => "waPC failure",
+            ErrorKind::MiscError(_) => "Misc error",
         }
     }
 
@@ -72,8 +70,6 @@ impl StdError for Error {
         match *self.0 {
             ErrorKind::KeyValueError(_) => None,
             ErrorKind::UTF8(ref e) => Some(e),
-            ErrorKind::ProtobufEncoding(ref e) => Some(e),
-            ErrorKind::ProtobufDecoding(ref e) => Some(e),
             ErrorKind::MessagingError(_) => None,
             ErrorKind::EnvVar(ref e) => Some(e),
             ErrorKind::JsonMarshaling(ref e) => Some(e),
@@ -81,6 +77,7 @@ impl StdError for Error {
             ErrorKind::HostError(_) => None,
             ErrorKind::BadDispatch(_) => None,
             ErrorKind::WapcError(ref e) => Some(e),
+            ErrorKind::MiscError(_) => None,
         }
     }
 }
@@ -90,8 +87,6 @@ impl fmt::Display for Error {
         match *self.0 {
             ErrorKind::KeyValueError(ref msg) => write!(f, "Key/Value error: {}", msg),
             ErrorKind::UTF8(ref e) => write!(f, "UTF8 encoding error: {}", e),
-            ErrorKind::ProtobufEncoding(ref e) => write!(f, "Protobuf encoding error: {}", e),
-            ErrorKind::ProtobufDecoding(ref e) => write!(f, "Protobuf decoding error: {}", e),
             ErrorKind::MessagingError(ref msg) => write!(f, "Messaging error: {}", msg),
             ErrorKind::EnvVar(ref e) => write!(f, "Environment variable error: {}", e),
             ErrorKind::JsonMarshaling(ref e) => write!(f, "JSON marshaling error: {}", e),
@@ -99,6 +94,7 @@ impl fmt::Display for Error {
             ErrorKind::HostError(ref e) => write!(f, "Host error: {}", e),
             ErrorKind::BadDispatch(ref e) => write!(f, "Bad dispatch, attempted operation: {}", e),
             ErrorKind::WapcError(ref e) => write!(f, "waPC error: {}", e),
+            ErrorKind::MiscError(ref e) => write!(f, "Misc error: {}", e),
         }
     }
 }
@@ -133,14 +129,8 @@ impl From<std::string::FromUtf8Error> for Error {
     }
 }
 
-impl From<prost::EncodeError> for Error {
-    fn from(source: prost::EncodeError) -> Error {
-        Error(Box::new(ErrorKind::ProtobufEncoding(source)))
-    }
-}
-
-impl From<prost::DecodeError> for Error {
-    fn from(source: prost::DecodeError) -> Error {
-        Error(Box::new(ErrorKind::ProtobufDecoding(source)))
+impl From<Box<dyn ::std::error::Error>> for Error {
+    fn from(source: Box<dyn ::std::error::Error>) -> Error {
+        Error(Box::new(ErrorKind::MiscError(source)))
     }
 }

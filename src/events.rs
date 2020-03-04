@@ -1,9 +1,9 @@
+use crate::EventStreams;
 use crate::Result;
-use crate::{protobytes, EventStreams};
-use prost::Message;
 use std::collections::HashMap;
 use wapc_guest::host_call;
 use wascc_codec::eventstreams::*;
+use wascc_codec::{deserialize, serialize};
 
 /// The reserved capability ID for the event streams functionality
 pub const CAPID_EVENTS: &str = "wascc:eventstreams";
@@ -30,9 +30,9 @@ impl EventStreams for DefaultEventStreams {
             values,
         };
 
-        host_call(CAPID_EVENTS, OP_WRITE_EVENT, &protobytes(ev)?)
+        host_call(CAPID_EVENTS, OP_WRITE_EVENT, &serialize(ev)?)
             .map(|v| {
-                WriteResponse::decode(v.as_ref())
+                deserialize::<WriteResponse>(&v)                    
                     .unwrap()
                     .event_id
                     .to_string()
@@ -46,8 +46,13 @@ impl EventStreams for DefaultEventStreams {
             range: None,
             stream_id: stream.to_string(),
         };
-        host_call(CAPID_EVENTS, OP_QUERY_STREAM, &protobytes(query)?)
-            .map(|v| StreamResults::decode(v.as_ref()).unwrap().events.clone())
+        host_call(CAPID_EVENTS, OP_QUERY_STREAM, &serialize(query)?)
+            .map(|v| {
+                deserialize::<StreamResults>(v.as_ref())
+                    .unwrap()
+                    .events
+                    .clone()
+            })
             .map_err(|e| e.into())
     }
 }

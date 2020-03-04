@@ -17,7 +17,6 @@
 //! This module contains the message broker client interface through which actor modules access
 //! the currently bound `wascc:messaging` capability provider
 
-use crate::protobytes;
 use crate::MessageBroker;
 use wapc_guest::host_call;
 
@@ -28,6 +27,7 @@ use crate::Result;
 use codec::messaging::{
     BrokerMessage, PublishMessage, RequestMessage, OP_PERFORM_REQUEST, OP_PUBLISH_MESSAGE,
 };
+use codec::serialize;
 use wascc_codec as codec;
 
 /// Exposes message broker functionality to actor modules
@@ -48,14 +48,14 @@ impl Default for DefaultMessageBroker {
 impl MessageBroker for DefaultMessageBroker {
     fn publish(&self, subject: &str, reply_to: Option<&str>, payload: &[u8]) -> Result<()> {
         let cmd = PublishMessage {
-            message: Some(BrokerMessage {
+            message: BrokerMessage {
                 subject: subject.to_string(),
                 reply_to: reply_to.map_or("".to_string(), |r| r.to_string()),
                 body: payload.to_vec(),
-            }),
+            },
         };
 
-        host_call(CAPID_MESSAGING, OP_PUBLISH_MESSAGE, &protobytes(cmd)?)
+        host_call(CAPID_MESSAGING, OP_PUBLISH_MESSAGE, &serialize(cmd)?)
             .map_err(|e| e.into())
             .map(|_vec| ())
     }
@@ -69,6 +69,6 @@ impl MessageBroker for DefaultMessageBroker {
 
         // The broker plugin applies no wrapper around the response from the broker, the
         // raw payload is delivered.
-        host_call(CAPID_MESSAGING, OP_PERFORM_REQUEST, &protobytes(cmd)?).map_err(|e| e.into())
+        host_call(CAPID_MESSAGING, OP_PERFORM_REQUEST, &serialize(cmd)?).map_err(|e| e.into())
     }
 }

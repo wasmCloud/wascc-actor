@@ -17,9 +17,7 @@
 pub use crate::CapabilitiesContext;
 pub use crate::{KeyValueStore, MessageBroker, RawCapability};
 
-pub use crate::actor_receive;
-pub use crate::protobytes;
-pub use prost::Message;
+pub use crate::actor_handlers;
 
 pub use codec::{blobstore, core, http, keyvalue, messaging};
 use wascc_codec as codec;
@@ -27,3 +25,4 @@ use wascc_codec as codec;
 pub use crate::errors;
 pub use crate::wapc::prelude::CallResult;
 pub use crate::ReceiveResult;
+pub use wascc_codec::{deserialize, serialize};
