@@ -31,4 +31,53 @@ impl Logger for DefaultLogger {
         let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
         Ok(())
     }
+    fn error(&self, actor: &str, body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            actor: actor.to_string(),
+            level: 1, // should this be a constant??
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
+
+    fn warn(&self, actor: &str, body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            actor: actor.to_string(),
+            level: 2, // should this be a constant??
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
+
+    fn info(&self, actor: &str, body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            actor: actor.to_string(),
+            level: 3, // should this be a constant??
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
+
+    fn debug(&self, actor: &str, body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            actor: actor.to_string(),
+            level: 4, // should this be a constant??
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
+
+    fn trace(&self, actor: &str, body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            actor: actor.to_string(),
+            level: 5, // should this be a constant??
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
 }

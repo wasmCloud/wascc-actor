@@ -162,6 +162,11 @@ pub trait ObjectStore {
 
 pub trait Logger {
     fn log(&self, actor: &str, level: usize, body: &str) -> Result<()>;
+    fn error(&self, actor: &str, body: &str) -> Result<()>;
+    fn warn(&self, actor: &str, body: &str) -> Result<()>;
+    fn info(&self, actor: &str, body: &str) -> Result<()>;
+    fn debug(&self, actor: &str, body: &str) -> Result<()>;
+    fn trace(&self, actor: &str, body: &str) -> Result<()>;
 }
 
 /// A loosely typed, opaque client consuming a capability provider in the host runtime
