@@ -274,6 +274,7 @@ pub mod errors;
 pub mod events;
 pub mod extras;
 pub mod kv;
+pub mod logger;
 pub mod logging;
 pub mod msg;
 pub mod objectstore;

@@ -24,7 +24,6 @@ impl Default for DefaultLogger {
 impl Logger for DefaultLogger {
     fn log(&self, actor: &str, level: usize, body: &str) -> Result<()> {
         let l = WriteLogRequest {
-            actor: actor.to_string(),
             level: level,
             body: body.to_string(),
         };
@@ -33,7 +32,6 @@ impl Logger for DefaultLogger {
     }
     fn error(&self, actor: &str, body: &str) -> Result<()> {
         let l = WriteLogRequest {
-            actor: actor.to_string(),
             level: 1, // should this be a constant??
             body: body.to_string(),
         };
@@ -43,7 +41,6 @@ impl Logger for DefaultLogger {
 
     fn warn(&self, actor: &str, body: &str) -> Result<()> {
         let l = WriteLogRequest {
-            actor: actor.to_string(),
             level: 2, // should this be a constant??
             body: body.to_string(),
         };
@@ -53,7 +50,6 @@ impl Logger for DefaultLogger {
 
     fn info(&self, actor: &str, body: &str) -> Result<()> {
         let l = WriteLogRequest {
-            actor: actor.to_string(),
             level: 3, // should this be a constant??
             body: body.to_string(),
         };
@@ -63,7 +59,6 @@ impl Logger for DefaultLogger {
 
     fn debug(&self, actor: &str, body: &str) -> Result<()> {
         let l = WriteLogRequest {
-            actor: actor.to_string(),
             level: 4, // should this be a constant??
             body: body.to_string(),
         };
@@ -73,7 +68,6 @@ impl Logger for DefaultLogger {
 
     fn trace(&self, actor: &str, body: &str) -> Result<()> {
         let l = WriteLogRequest {
-            actor: actor.to_string(),
             level: 5, // should this be a constant??
             body: body.to_string(),
         };
