@@ -2,32 +2,32 @@ use log::{Metadata, Record};
 use crate::logging::DefaultLogger;
 use crate::Logger;
 
-struct Logger {
-    l: DefaultLogger
+pub struct AutomaticLogger {
+    pub l: DefaultLogger
 }
 
-impl Logger {
+impl AutomaticLogger {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Default for Logger {
+impl Default for AutomaticLogger {
     fn default() -> Self {
-        Logger {
+        AutomaticLogger {
             l: DefaultLogger{}
         }
     }
 }
 
-impl log::Log for Logger {
+impl log::Log for AutomaticLogger {
     fn enabled(&self, _metadata: &Metadata) -> bool {
         true
     }
 
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
-            self.l.log("actor", record.metadata().level(), "body");
+            self.l.log("actor", 5, "body");
             //println!("{} - {}", record.level(), record.args());
         }
     }
@@ -37,7 +37,7 @@ impl log::Log for Logger {
 
 use log::{LevelFilter, SetLoggerError};
 
-static LOGGER: Logger = Logger{l: DefaultLogger{}};
+static LOGGER: AutomaticLogger = AutomaticLogger{l: DefaultLogger{}};
 
 pub fn init() -> Result<(), SetLoggerError> {
     log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace))

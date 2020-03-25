@@ -45,6 +45,7 @@ pub type ReceiveResult = ::std::result::Result<Vec<u8>, Box<dyn std::error::Erro
 pub extern crate wapc_guest as wapc;
 use crate::kv::DefaultKeyValueStore;
 use crate::logging::DefaultLogger;
+use crate::logger::AutomaticLogger;
 use crate::msg::DefaultMessageBroker;
 use crate::objectstore::DefaultObjectStore;
 use crate::raw::DefaultRawCapability;
@@ -54,6 +55,7 @@ use std::collections::HashMap;
 use wapc_guest::console_log;
 use wascc_codec::blobstore::{Blob, BlobList, Container, Transfer};
 use wascc_codec::eventstreams::Event;
+use log::{LevelFilter, SetLoggerError};
 
 /// Actor developers will use this macro to set up their operation handlers
 #[macro_export]
@@ -201,9 +203,14 @@ impl Default for CapabilitiesContext {
     }
 }
 
+static LOGGER: AutomaticLogger = AutomaticLogger{l: DefaultLogger{}};
+
+
 impl CapabilitiesContext {
     /// Creates a new capabilities context. This is invoked by the `actor_receive` macro
-    pub fn new() -> CapabilitiesContext {
+    pub fn new() ->  CapabilitiesContext {
+
+    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace));
         CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),
