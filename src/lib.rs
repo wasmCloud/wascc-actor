@@ -191,7 +191,6 @@ pub struct CapabilitiesContext {
 
 impl Default for CapabilitiesContext {
     fn default() -> CapabilitiesContext {
-        error!("Default CapContext");
         CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),
