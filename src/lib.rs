@@ -41,7 +41,8 @@
 
 pub type Result<T> = ::std::result::Result<T, crate::errors::Error>;
 pub type ReceiveResult = ::std::result::Result<Vec<u8>, Box<dyn std::error::Error>>;
-
+#[macro_use]
+extern crate log;
 pub extern crate wapc_guest as wapc;
 use crate::kv::DefaultKeyValueStore;
 use crate::logging::DefaultLogger;
@@ -55,7 +56,6 @@ use std::collections::HashMap;
 use wapc_guest::console_log;
 use wascc_codec::blobstore::{Blob, BlobList, Container, Transfer};
 use wascc_codec::eventstreams::Event;
-use log::{LevelFilter, SetLoggerError};
 
 /// Actor developers will use this macro to set up their operation handlers
 #[macro_export]
@@ -163,12 +163,12 @@ pub trait ObjectStore {
 }
 
 pub trait Logger {
-    fn log(&self, actor: &str, level: usize, body: &str) -> Result<()>;
-    fn error(&self, actor: &str, body: &str) -> Result<()>;
-    fn warn(&self, actor: &str, body: &str) -> Result<()>;
-    fn info(&self, actor: &str, body: &str) -> Result<()>;
-    fn debug(&self, actor: &str, body: &str) -> Result<()>;
-    fn trace(&self, actor: &str, body: &str) -> Result<()>;
+    fn log(&self,  level: usize, body: &str) -> Result<()>;
+    fn error(&self,  body: &str) -> Result<()>;
+    fn warn(&self, body: &str) -> Result<()>;
+    fn info(&self,  body: &str) -> Result<()>;
+    fn debug(&self,  body: &str) -> Result<()>;
+    fn trace(&self,  body: &str) -> Result<()>;
 }
 
 /// A loosely typed, opaque client consuming a capability provider in the host runtime
@@ -191,6 +191,7 @@ pub struct CapabilitiesContext {
 
 impl Default for CapabilitiesContext {
     fn default() -> CapabilitiesContext {
+        error!("Default CapContext");
         CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),
@@ -209,8 +210,11 @@ static LOGGER: AutomaticLogger = AutomaticLogger{l: DefaultLogger{}};
 impl CapabilitiesContext {
     /// Creates a new capabilities context. This is invoked by the `actor_receive` macro
     pub fn new() ->  CapabilitiesContext {
-
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace));
+    match log::set_logger(&LOGGER) {
+       std::result::Result::Ok(_) => console_log("Set Logger: OK"),
+        _ => console_log("Set Logger: not ok")
+    }
+    log::set_max_level(log::LevelFilter::Trace);
         CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),

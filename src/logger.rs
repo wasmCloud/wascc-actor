@@ -26,9 +26,12 @@ impl log::Log for AutomaticLogger {
     }
 
     fn log(&self, record: &Record) {
+
         if self.enabled(record.metadata()) {
-            self.l.log("actor", 5, "body");
-            //println!("{} - {}", record.level(), record.args());
+            match self.l.log( record.level() as _, &format!("{}",record.args())) {
+                Ok(r) => crate::console_log("logger:log ok"),
+                Err(r) => crate::console_log("logger:log not ok{}"),
+            }
         }
     }
 
@@ -49,7 +52,7 @@ mod test {
     use super::*;
     use crate::Logger;
 
-    static LOGGER: Logger = Logger{l: DefaultLogger{}};
+    static LOGGER: AutomaticLogger = AutomaticLogger{l: DefaultLogger{}};
     #[test]
     fn logger() {
         log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace));
