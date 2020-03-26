@@ -8,7 +8,6 @@ use wascc_codec::serialize;
 /// The reserved capability ID for the logging functionality
 pub const CAPID_LOGGING: &str = "wascc:logging";
 
-const NONE: usize = 0;
 const ERROR: usize = 1;
 const WARN: usize = 2;
 const INFO: usize = 3;
