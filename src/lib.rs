@@ -41,11 +41,9 @@
 
 pub type Result<T> = ::std::result::Result<T, crate::errors::Error>;
 pub type ReceiveResult = ::std::result::Result<Vec<u8>, Box<dyn std::error::Error>>;
-#[macro_use]
 extern crate log;
 pub extern crate wapc_guest as wapc;
 use crate::kv::DefaultKeyValueStore;
-use crate::logging::DefaultLogger;
 use crate::logger::AutomaticLogger;
 use crate::msg::DefaultMessageBroker;
 use crate::objectstore::DefaultObjectStore;
@@ -198,12 +196,12 @@ impl Default for CapabilitiesContext {
             blob: Box::new(DefaultObjectStore::new()),
             extras: Box::new(DefaultExtras::new()),
             events: Box::new(DefaultEventStreams::new()),
-            log: Box::new(DefaultLogger::new()),
+            log: Box::new(AutomaticLogger::new()),
         }
     }
 }
 
-static LOGGER: AutomaticLogger = AutomaticLogger{l: DefaultLogger{}};
+static LOGGER: AutomaticLogger = AutomaticLogger{};
 
 
 impl CapabilitiesContext {
@@ -221,7 +219,7 @@ impl CapabilitiesContext {
             blob: Box::new(DefaultObjectStore::new()),
             extras: Box::new(DefaultExtras::new()),
             events: Box::new(DefaultEventStreams::new()),
-            log: Box::new(DefaultLogger::new()),
+            log: Box::new(AutomaticLogger::new()),
         }
     }
 
@@ -285,7 +283,6 @@ pub mod events;
 pub mod extras;
 pub mod kv;
 pub mod logger;
-pub mod logging;
 pub mod msg;
 pub mod objectstore;
 pub mod prelude;

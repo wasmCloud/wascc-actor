@@ -1,21 +1,36 @@
 use log::{Metadata, Record};
-use crate::logging::DefaultLogger;
 use crate::Logger;
+use crate::Result;
+use wapc_guest::host_call;
+use wascc_codec::logging::*;
+use wascc_codec::serialize;
+
+/// The reserved capability ID for the logging functionality
+pub const CAPID_LOGGING: &str = "wascc:logging";
+
+const NONE: usize = 0;
+const ERROR: usize = 1;
+const WARN: usize = 2;
+const INFO: usize = 3;
+const DEBUG: usize = 4;
+const TRACE: usize = 5;
 
 pub struct AutomaticLogger {
-    pub l: DefaultLogger
 }
 
 impl AutomaticLogger {
     pub fn new() -> Self {
         Self::default()
     }
+    fn _log(&self,req: WriteLogRequest) {
+
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(req).unwrap());
+    }
 }
 
 impl Default for AutomaticLogger {
     fn default() -> Self {
         AutomaticLogger {
-            l: DefaultLogger{}
         }
     }
 }
@@ -28,34 +43,68 @@ impl log::Log for AutomaticLogger {
     fn log(&self, record: &Record) {
 
         if self.enabled(record.metadata()) {
-            match self.l.log( record.level() as _, &format!("{}",record.args())) {
-                Ok(r) => crate::console_log("logger:log ok"),
-                Err(r) => crate::console_log("logger:log not ok{}"),
-            }
+
+        let l = WriteLogRequest {
+            level: record.level() as _,
+        body: format!("{}",record.args()),
+        };
+           self._log( l) 
         }
     }
 
     fn flush(&self) {}
 }
+impl Logger for AutomaticLogger {
+    fn log(&self,  level: usize, body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            level: level,
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
+    fn error(&self,  body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            level: ERROR,
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
 
-use log::{LevelFilter, SetLoggerError};
+    fn warn(&self,  body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            level: WARN, 
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
 
-static LOGGER: AutomaticLogger = AutomaticLogger{l: DefaultLogger{}};
+    fn info(&self,  body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            level: INFO, 
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
 
-pub fn init() -> Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace))
-}
+    fn debug(&self,  body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            level: DEBUG, 
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
+    }
 
-#[cfg(test)]
-mod test {
-    use log::info;
-    use super::*;
-    use crate::Logger;
-
-    static LOGGER: AutomaticLogger = AutomaticLogger{l: DefaultLogger{}};
-    #[test]
-    fn logger() {
-        log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Trace));
-        info!("brian");
+    fn trace(&self,  body: &str) -> Result<()> {
+        let l = WriteLogRequest {
+            level: TRACE, 
+            body: body.to_string(),
+        };
+        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        Ok(())
     }
 }
