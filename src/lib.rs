@@ -161,12 +161,12 @@ pub trait ObjectStore {
 }
 
 pub trait Logger {
-    fn log(&self,  level: usize, body: &str) -> Result<()>;
-    fn error(&self,  body: &str) -> Result<()>;
+    fn log(&self, level: usize, body: &str) -> Result<()>;
+    fn error(&self, body: &str) -> Result<()>;
     fn warn(&self, body: &str) -> Result<()>;
-    fn info(&self,  body: &str) -> Result<()>;
-    fn debug(&self,  body: &str) -> Result<()>;
-    fn trace(&self,  body: &str) -> Result<()>;
+    fn info(&self, body: &str) -> Result<()>;
+    fn debug(&self, body: &str) -> Result<()>;
+    fn trace(&self, body: &str) -> Result<()>;
 }
 
 /// A loosely typed, opaque client consuming a capability provider in the host runtime
@@ -201,17 +201,16 @@ impl Default for CapabilitiesContext {
     }
 }
 
-static LOGGER: AutomaticLogger = AutomaticLogger{};
-
+static LOGGER: AutomaticLogger = AutomaticLogger {};
 
 impl CapabilitiesContext {
     /// Creates a new capabilities context. This is invoked by the `actor_receive` macro
-    pub fn new() ->  CapabilitiesContext {
-    match log::set_logger(&LOGGER) {
-       std::result::Result::Ok(_) => console_log("Set Logger: OK"),
-        _ => console_log("Set Logger: not ok")
-    }
-    log::set_max_level(log::LevelFilter::Trace);
+    pub fn new() -> CapabilitiesContext {
+        match log::set_logger(&LOGGER) {
+            std::result::Result::Ok(_) => console_log("Set Logger: OK"),
+            _ => console_log("Set Logger: not ok"),
+        }
+        log::set_max_level(log::LevelFilter::Trace);
         CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),
