@@ -41,9 +41,10 @@
 
 pub type Result<T> = ::std::result::Result<T, crate::errors::Error>;
 pub type ReceiveResult = ::std::result::Result<Vec<u8>, Box<dyn std::error::Error>>;
-
+extern crate log;
 pub extern crate wapc_guest as wapc;
 use crate::kv::DefaultKeyValueStore;
+use crate::logger::AutomaticLogger;
 use crate::msg::DefaultMessageBroker;
 use crate::objectstore::DefaultObjectStore;
 use crate::raw::DefaultRawCapability;
@@ -159,6 +160,15 @@ pub trait ObjectStore {
     fn start_download(&self, blob: &Blob, chunk_size: u64) -> Result<Transfer>;
 }
 
+pub trait Logger {
+    fn log(&self, level: usize, body: &str) -> Result<()>;
+    fn error(&self, body: &str) -> Result<()>;
+    fn warn(&self, body: &str) -> Result<()>;
+    fn info(&self, body: &str) -> Result<()>;
+    fn debug(&self, body: &str) -> Result<()>;
+    fn trace(&self, body: &str) -> Result<()>;
+}
+
 /// A loosely typed, opaque client consuming a capability provider in the host runtime
 pub trait RawCapability {
     fn call(&self, capid: &str, operation: &str, msg: &[u8]) -> Result<Vec<u8>>;
@@ -174,6 +184,7 @@ pub struct CapabilitiesContext {
     blob: Box<dyn ObjectStore>,
     extras: Box<dyn Extras>,
     events: Box<dyn EventStreams>,
+    log: Box<dyn Logger>,
 }
 
 impl Default for CapabilitiesContext {
@@ -185,13 +196,21 @@ impl Default for CapabilitiesContext {
             blob: Box::new(DefaultObjectStore::new()),
             extras: Box::new(DefaultExtras::new()),
             events: Box::new(DefaultEventStreams::new()),
+            log: Box::new(AutomaticLogger::new()),
         }
     }
 }
 
+static LOGGER: AutomaticLogger = AutomaticLogger {};
+
 impl CapabilitiesContext {
     /// Creates a new capabilities context. This is invoked by the `actor_receive` macro
     pub fn new() -> CapabilitiesContext {
+        match log::set_logger(&LOGGER) {
+            std::result::Result::Ok(_) => console_log("Set Logger: OK"),
+            _ => console_log("Set Logger: not ok"),
+        }
+        log::set_max_level(log::LevelFilter::Trace);
         CapabilitiesContext {
             kv: Box::new(DefaultKeyValueStore::new()),
             msg: Box::new(DefaultMessageBroker::new()),
@@ -199,6 +218,7 @@ impl CapabilitiesContext {
             blob: Box::new(DefaultObjectStore::new()),
             extras: Box::new(DefaultExtras::new()),
             events: Box::new(DefaultEventStreams::new()),
+            log: Box::new(AutomaticLogger::new()),
         }
     }
 
@@ -211,6 +231,7 @@ impl CapabilitiesContext {
         blob: impl ObjectStore + 'static,
         extras: impl Extras + 'static,
         events: impl EventStreams + 'static,
+        log: impl Logger + 'static,
     ) -> Self {
         CapabilitiesContext {
             kv: Box::new(kv),
@@ -219,6 +240,7 @@ impl CapabilitiesContext {
             blob: Box::new(blob),
             extras: Box::new(extras),
             events: Box::new(events),
+            log: Box::new(log),
         }
     }
 
@@ -246,7 +268,11 @@ impl CapabilitiesContext {
         self.events.as_ref()
     }
 
-    pub fn log(&self, msg: &str) {
+    pub fn log(&self) -> &dyn Logger {
+        self.log.as_ref()
+    }
+
+    pub fn println(&self, msg: &str) {
         console_log(msg);
     }
 }
@@ -255,6 +281,7 @@ pub mod errors;
 pub mod events;
 pub mod extras;
 pub mod kv;
+pub mod logger;
 pub mod msg;
 pub mod objectstore;
 pub mod prelude;

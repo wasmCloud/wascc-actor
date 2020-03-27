@@ -31,3 +31,33 @@ fn health(_ctx: &CapabilitiesContext, _req: core::HealthRequest) -> ReceiveResul
     Ok(vec![])
 }
 ```
+
+## Using the wascc:logging capability
+
+
+Inside a _wascc_ actor, use normal `log` macros to write logs:
+
+```
+#[macro_use]
+extern crate log;
+
+fn hello_world(
+   ctx: &CapabilitiesContext,
+   r: http::Request) -> CallResult {
+    // regular log macros get intercepted automatically
+    // and translated into waPC calls to the wascc:logging 
+    // provider
+    debug!("Request path {}", r.path);
+    
+    let echo = EchoRequest {
+        method: r.method,
+        path: r.path,
+        query_string: r.query_string,
+        body: r.body,
+    };
+   
+    let resp = http::Response::json(echo, 200, "OK");
+
+    Ok(serialize(resp)?)
+}
+```

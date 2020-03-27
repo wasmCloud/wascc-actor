@@ -32,7 +32,7 @@ impl EventStreams for DefaultEventStreams {
 
         host_call(CAPID_EVENTS, OP_WRITE_EVENT, &serialize(ev)?)
             .map(|v| {
-                deserialize::<WriteResponse>(&v)                    
+                deserialize::<WriteResponse>(&v)
                     .unwrap()
                     .event_id
                     .to_string()
