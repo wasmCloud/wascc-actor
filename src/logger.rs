@@ -1,4 +1,3 @@
-use crate::Logger;
 use crate::Result;
 use log::{Metadata, Record};
 use wapc_guest::host_call;
@@ -14,24 +13,42 @@ const INFO: usize = 3;
 const DEBUG: usize = 4;
 const TRACE: usize = 5;
 
-pub struct AutomaticLogger {}
+use std::sync::{Arc, RwLock};
 
-impl AutomaticLogger {
-    pub fn new() -> Self {
-        Self::default()
-    }
-    fn _log(&self, req: WriteLogRequest) {
-        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(req).unwrap());
-    }
+lazy_static! {
+    pub static ref LOG_BINDING: Arc<RwLock<String>> =
+        { Arc::new(RwLock::new("default".to_string())) };
 }
 
-impl Default for AutomaticLogger {
+static LOGGER: AutomaticLoggerHostBinding = AutomaticLoggerHostBinding {};
+
+lazy_static! {
+    pub static ref DUMMY: bool = {
+        log::set_logger(&LOGGER).unwrap();
+        log::set_max_level(log::LevelFilter::Trace);
+        true
+    };
+}
+
+pub struct AutomaticLoggerHostBinding {}
+
+impl Default for AutomaticLoggerHostBinding {
     fn default() -> Self {
-        AutomaticLogger {}
+        AutomaticLoggerHostBinding {}
     }
 }
 
-impl log::Log for AutomaticLogger {
+pub fn host(binding: &str) -> AutomaticLoggerHostBinding {
+    *LOG_BINDING.write().unwrap() = binding.to_string();
+    AutomaticLoggerHostBinding {}
+}
+
+pub fn default() -> AutomaticLoggerHostBinding {
+    *LOG_BINDING.write().unwrap() = "default".to_string();
+    AutomaticLoggerHostBinding {}
+}
+
+impl log::Log for AutomaticLoggerHostBinding {
     fn enabled(&self, _metadata: &Metadata) -> bool {
         true
     }
@@ -48,57 +65,100 @@ impl log::Log for AutomaticLogger {
 
     fn flush(&self) {}
 }
-impl Logger for AutomaticLogger {
-    fn log(&self, level: usize, body: &str) -> Result<()> {
+
+impl AutomaticLoggerHostBinding {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    fn _log(&self, req: WriteLogRequest) {
+        let _ = host_call(
+            &LOG_BINDING.read().unwrap(),
+            CAPID_LOGGING,
+            OP_LOG,
+            &serialize(req).unwrap(),
+        );
+    }
+
+    pub fn log(&self, level: usize, body: &str) -> Result<()> {
         let l = WriteLogRequest {
             level: level,
             body: body.to_string(),
         };
-        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        let _ = host_call(
+            &LOG_BINDING.read().unwrap(),
+            CAPID_LOGGING,
+            OP_LOG,
+            &serialize(l)?,
+        );
         Ok(())
     }
-    fn error(&self, body: &str) -> Result<()> {
+    pub fn error(&self, body: &str) -> Result<()> {
         let l = WriteLogRequest {
             level: ERROR,
             body: body.to_string(),
         };
-        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        let _ = host_call(
+            &LOG_BINDING.read().unwrap(),
+            CAPID_LOGGING,
+            OP_LOG,
+            &serialize(l)?,
+        );
         Ok(())
     }
 
-    fn warn(&self, body: &str) -> Result<()> {
+    pub fn warn(&self, body: &str) -> Result<()> {
         let l = WriteLogRequest {
             level: WARN,
             body: body.to_string(),
         };
-        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        let _ = host_call(
+            &LOG_BINDING.read().unwrap(),
+            CAPID_LOGGING,
+            OP_LOG,
+            &serialize(l)?,
+        );
         Ok(())
     }
 
-    fn info(&self, body: &str) -> Result<()> {
+    pub fn info(&self, body: &str) -> Result<()> {
         let l = WriteLogRequest {
             level: INFO,
             body: body.to_string(),
         };
-        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        let _ = host_call(
+            &LOG_BINDING.read().unwrap(),
+            CAPID_LOGGING,
+            OP_LOG,
+            &serialize(l)?,
+        );
         Ok(())
     }
 
-    fn debug(&self, body: &str) -> Result<()> {
+    pub fn debug(&self, body: &str) -> Result<()> {
         let l = WriteLogRequest {
             level: DEBUG,
             body: body.to_string(),
         };
-        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        let _ = host_call(
+            &LOG_BINDING.read().unwrap(),
+            CAPID_LOGGING,
+            OP_LOG,
+            &serialize(l)?,
+        );
         Ok(())
     }
 
-    fn trace(&self, body: &str) -> Result<()> {
+    pub fn trace(&self, body: &str) -> Result<()> {
         let l = WriteLogRequest {
             level: TRACE,
             body: body.to_string(),
         };
-        let _ = host_call(CAPID_LOGGING, OP_LOG, &serialize(l)?);
+        let _ = host_call(
+            &LOG_BINDING.read().unwrap(),
+            CAPID_LOGGING,
+            OP_LOG,
+            &serialize(l)?,
+        );
         Ok(())
     }
 }

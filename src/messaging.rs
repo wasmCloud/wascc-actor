@@ -1,4 +1,4 @@
-// Copyright 2015-2019 Capital One Services, LLC
+// Copyright 2015-2020 Capital One Services, LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
 //! # Message Broker
 //!
 //! This module contains the message broker client interface through which actor modules access
-//! the currently bound `wascc:messaging` capability provider
+//! a bound `wascc:messaging` capability provider
 
-use crate::MessageBroker;
 use wapc_guest::host_call;
 
 /// The reserved capability ID for a message broker. Used for call routing in the host runtime.
@@ -30,23 +29,27 @@ use codec::messaging::{
 use codec::serialize;
 use wascc_codec as codec;
 
+/// Create a new named message broker host binding
+pub fn host(binding: &str) -> MessageBrokerHostBinding {
+    MessageBrokerHostBinding {
+        binding: binding.to_string(),
+    }
+}
+
+/// Create a default message broker host binding
+pub fn default() -> MessageBrokerHostBinding {
+    MessageBrokerHostBinding {
+        binding: "default".to_string(),
+    }
+}
+
 /// Exposes message broker functionality to actor modules
-pub struct DefaultMessageBroker {}
-
-impl DefaultMessageBroker {
-    pub fn new() -> Self {
-        DefaultMessageBroker::default()
-    }
+pub struct MessageBrokerHostBinding {
+    binding: String,
 }
 
-impl Default for DefaultMessageBroker {
-    fn default() -> Self {
-        DefaultMessageBroker {}
-    }
-}
-
-impl MessageBroker for DefaultMessageBroker {
-    fn publish(&self, subject: &str, reply_to: Option<&str>, payload: &[u8]) -> Result<()> {
+impl MessageBrokerHostBinding {
+    pub fn publish(&self, subject: &str, reply_to: Option<&str>, payload: &[u8]) -> Result<()> {
         let cmd = PublishMessage {
             message: BrokerMessage {
                 subject: subject.to_string(),
@@ -55,12 +58,17 @@ impl MessageBroker for DefaultMessageBroker {
             },
         };
 
-        host_call(CAPID_MESSAGING, OP_PUBLISH_MESSAGE, &serialize(cmd)?)
-            .map_err(|e| e.into())
-            .map(|_vec| ())
+        host_call(
+            &self.binding,
+            CAPID_MESSAGING,
+            OP_PUBLISH_MESSAGE,
+            &serialize(cmd)?,
+        )
+        .map_err(|e| e.into())
+        .map(|_vec| ())
     }
 
-    fn request(&self, subject: &str, payload: &[u8], timeout_ms: u64) -> Result<Vec<u8>> {
+    pub fn request(&self, subject: &str, payload: &[u8], timeout_ms: u64) -> Result<Vec<u8>> {
         let cmd = RequestMessage {
             subject: subject.to_string(),
             timeout_ms: timeout_ms as _,
@@ -69,6 +77,12 @@ impl MessageBroker for DefaultMessageBroker {
 
         // The broker plugin applies no wrapper around the response from the broker, the
         // raw payload is delivered.
-        host_call(CAPID_MESSAGING, OP_PERFORM_REQUEST, &serialize(cmd)?).map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_MESSAGING,
+            OP_PERFORM_REQUEST,
+            &serialize(cmd)?,
+        )
+        .map_err(|e| e.into())
     }
 }

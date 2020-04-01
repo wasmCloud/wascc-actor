@@ -1,4 +1,4 @@
-use crate::{ObjectStore, Result};
+use crate::Result;
 use wapc_guest::host_call;
 use wascc_codec::blobstore::Blob;
 use wascc_codec::blobstore::Container;
@@ -13,73 +13,111 @@ use wascc_codec::{deserialize, serialize};
 pub const CAPID_BLOBSTORE: &str = "wascc:blobstore";
 
 /// An abstraction around a host runtime capability for a key-value store
-#[derive(Default)]
-pub struct DefaultObjectStore {}
+pub struct ObjectStoreHostBinding {
+    binding: String,
+}
 
-impl DefaultObjectStore {
-    pub fn new() -> Self {
-        Self::default()
+impl Default for ObjectStoreHostBinding {
+    fn default() -> Self {
+        ObjectStoreHostBinding {
+            binding: "default".to_string(),
+        }
     }
 }
 
-impl ObjectStore for DefaultObjectStore {
-    fn create_container(&self, name: &str) -> Result<Container> {
+pub fn host(binding: &str) -> ObjectStoreHostBinding {
+    ObjectStoreHostBinding {
+        binding: binding.to_string(),
+    }
+}
+
+pub fn default() -> ObjectStoreHostBinding {
+    ObjectStoreHostBinding::default()
+}
+
+impl ObjectStoreHostBinding {
+    pub fn create_container(&self, name: &str) -> Result<Container> {
         let cmd = Container {
             id: name.to_string(),
         };
-        host_call(CAPID_BLOBSTORE, OP_CREATE_CONTAINER, &serialize(cmd)?)
-            .map(|v| deserialize::<Container>(v.as_ref()).unwrap())
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_CREATE_CONTAINER,
+            &serialize(cmd)?,
+        )
+        .map(|v| deserialize::<Container>(v.as_ref()).unwrap())
+        .map_err(|e| e.into())
     }
 
-    fn remove_container(&self, name: &str) -> Result<()> {
+    pub fn remove_container(&self, name: &str) -> Result<()> {
         let cmd = Container {
             id: name.to_string(),
         };
-        host_call(CAPID_BLOBSTORE, OP_REMOVE_CONTAINER, &serialize(cmd)?)
-            .map(|_v| ())
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_REMOVE_CONTAINER,
+            &serialize(cmd)?,
+        )
+        .map(|_v| ())
+        .map_err(|e| e.into())
     }
 
-    fn remove_object(&self, name: &str, container: &str) -> crate::Result<()> {
+    pub fn remove_object(&self, name: &str, container: &str) -> crate::Result<()> {
         let cmd = Blob {
             id: name.to_string(),
             container: container.to_string(),
             byte_size: 0,
         };
-        host_call(CAPID_BLOBSTORE, OP_REMOVE_OBJECT, &serialize(cmd)?)
-            .map(|_v| ())
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_REMOVE_OBJECT,
+            &serialize(cmd)?,
+        )
+        .map(|_v| ())
+        .map_err(|e| e.into())
     }
 
-    fn list_objects(&self, container: &str) -> Result<BlobList> {
+    pub fn list_objects(&self, container: &str) -> Result<BlobList> {
         let cmd = Container {
             id: container.to_string(),
         };
-        host_call(CAPID_BLOBSTORE, OP_LIST_OBJECTS, &serialize(cmd)?)
-            .map(|v| deserialize::<BlobList>(v.as_ref()).unwrap())
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_LIST_OBJECTS,
+            &serialize(cmd)?,
+        )
+        .map(|v| deserialize::<BlobList>(v.as_ref()).unwrap())
+        .map_err(|e| e.into())
     }
 
-    fn get_blob_info(&self, container: &str, id: &str) -> Result<Option<Blob>> {
+    pub fn get_blob_info(&self, container: &str, id: &str) -> Result<Option<Blob>> {
         let cmd = Blob {
             id: id.to_string(),
             container: container.to_string(),
             byte_size: 0,
         };
-        host_call(CAPID_BLOBSTORE, OP_GET_OBJECT_INFO, &serialize(cmd)?)
-            .map(|v| {
-                let b = deserialize::<Blob>(v.as_ref()).unwrap();
-                if b.id.is_empty() {
-                    None
-                } else {
-                    Some(b)
-                }
-            })
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_GET_OBJECT_INFO,
+            &serialize(cmd)?,
+        )
+        .map(|v| {
+            let b = deserialize::<Blob>(v.as_ref()).unwrap();
+            if b.id.is_empty() {
+                None
+            } else {
+                Some(b)
+            }
+        })
+        .map_err(|e| e.into())
     }
 
-    fn start_upload(&self, blob: &Blob, chunk_size: u64, total_bytes: u64) -> Result<Transfer> {
+    pub fn start_upload(&self, blob: &Blob, chunk_size: u64, total_bytes: u64) -> Result<Transfer> {
         let transfer = Transfer {
             blob_id: blob.id.to_string(),
             container: blob.container.to_string(),
@@ -95,12 +133,22 @@ impl ObjectStore for DefaultObjectStore {
             total_bytes,
             chunk_bytes: vec![],
         };
-        host_call(CAPID_BLOBSTORE, OP_START_UPLOAD, &serialize(cmd)?)
-            .map(|_v| transfer)
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_START_UPLOAD,
+            &serialize(cmd)?,
+        )
+        .map(|_v| transfer)
+        .map_err(|e| e.into())
     }
 
-    fn upload_chunk(&self, transfer: &Transfer, offset: u64, bytes: &[u8]) -> crate::Result<()> {
+    pub fn upload_chunk(
+        &self,
+        transfer: &Transfer,
+        offset: u64,
+        bytes: &[u8],
+    ) -> crate::Result<()> {
         let cmd = FileChunk {
             id: transfer.blob_id.to_string(),
             container: transfer.container.to_string(),
@@ -109,12 +157,17 @@ impl ObjectStore for DefaultObjectStore {
             total_bytes: transfer.total_size,
             chunk_bytes: bytes.to_vec(),
         };
-        host_call(CAPID_BLOBSTORE, OP_UPLOAD_CHUNK, &serialize(cmd)?)
-            .map(|_v| ())
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_UPLOAD_CHUNK,
+            &serialize(cmd)?,
+        )
+        .map(|_v| ())
+        .map_err(|e| e.into())
     }
 
-    fn start_download(&self, blob: &Blob, chunk_size: u64) -> crate::Result<Transfer> {
+    pub fn start_download(&self, blob: &Blob, chunk_size: u64) -> crate::Result<Transfer> {
         let transfer = Transfer {
             blob_id: blob.id.to_string(),
             container: blob.container.to_string(),
@@ -127,8 +180,13 @@ impl ObjectStore for DefaultObjectStore {
             id: blob.id.to_string(),
             chunk_size,
         };
-        host_call(CAPID_BLOBSTORE, OP_START_DOWNLOAD, &serialize(cmd)?)
-            .map(|_v| transfer)
-            .map_err(|e| e.into())
+        host_call(
+            &self.binding,
+            CAPID_BLOBSTORE,
+            OP_START_DOWNLOAD,
+            &serialize(cmd)?,
+        )
+        .map(|_v| transfer)
+        .map_err(|e| e.into())
     }
 }
