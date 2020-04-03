@@ -12,7 +12,7 @@ keywords = ["wapc", "webassembly", "wasm", "wascc", "actor"]
 categories = ["wasm", "api-bindings"]
 
 [badges]
-maintenance = {status = "actively-maintained"}
+maintenance = { status = "actively-developed" }
 
 [dependencies]
 wascc-codec = "0.6.0"
