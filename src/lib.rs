@@ -55,7 +55,7 @@ use wapc_guest::console_log;
 macro_rules! actor_handlers(
     { $($key:path => $user_handler:ident),* } => {
         use $crate::wapc::prelude::*;
-
+        let _ = $crate::logger::ENSURE_LOGGER;
         wapc_handler!(handle_wapc);
         fn handle_wapc(operation: &str, msg: &[u8]) -> CallResult {
             match operation {
@@ -67,6 +67,7 @@ macro_rules! actor_handlers(
      };
 );
 
+/// Use this function for simple, unstructured logging outside the usual log macros
 pub fn println(msg: &str) {
     console_log(msg)
 }

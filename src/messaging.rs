@@ -19,13 +19,10 @@
 
 use wapc_guest::host_call;
 
-/// The reserved capability ID for a message broker. Used for call routing in the host runtime.
-pub const CAPID_MESSAGING: &str = "wascc:messaging";
+const CAPID_MESSAGING: &str = "wascc:messaging";
 
 use crate::Result;
-use codec::messaging::{
-    BrokerMessage, PublishMessage, RequestMessage, OP_PERFORM_REQUEST, OP_PUBLISH_MESSAGE,
-};
+use codec::messaging::{BrokerMessage, RequestMessage, OP_PERFORM_REQUEST, OP_PUBLISH_MESSAGE};
 use codec::serialize;
 use wascc_codec as codec;
 
@@ -49,13 +46,12 @@ pub struct MessageBrokerHostBinding {
 }
 
 impl MessageBrokerHostBinding {
+    /// Publishes a message on a given subject with an optional reply subject
     pub fn publish(&self, subject: &str, reply_to: Option<&str>, payload: &[u8]) -> Result<()> {
-        let cmd = PublishMessage {
-            message: BrokerMessage {
-                subject: subject.to_string(),
-                reply_to: reply_to.map_or("".to_string(), |r| r.to_string()),
-                body: payload.to_vec(),
-            },
+        let cmd = BrokerMessage {
+            subject: subject.to_string(),
+            reply_to: reply_to.map_or("".to_string(), |r| r.to_string()),
+            body: payload.to_vec(),
         };
 
         host_call(
@@ -68,6 +64,7 @@ impl MessageBrokerHostBinding {
         .map(|_vec| ())
     }
 
+    /// Publishes a message and expects a reply to come back within a given timeout (in milliseconds)
     pub fn request(&self, subject: &str, payload: &[u8], timeout_ms: u64) -> Result<Vec<u8>> {
         let cmd = RequestMessage {
             subject: subject.to_string(),

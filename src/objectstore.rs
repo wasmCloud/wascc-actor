@@ -9,8 +9,7 @@ use wascc_codec::blobstore::{
 };
 use wascc_codec::{deserialize, serialize};
 
-/// The reserved capability ID for a key/value store. Used for call routing in the host runtime.
-pub const CAPID_BLOBSTORE: &str = "wascc:blobstore";
+const CAPID_BLOBSTORE: &str = "wascc:blobstore";
 
 /// An abstraction around a host runtime capability for a key-value store
 pub struct ObjectStoreHostBinding {
@@ -25,17 +24,20 @@ impl Default for ObjectStoreHostBinding {
     }
 }
 
+/// Creates a named host binding for the `wascc:objectstore` capability
 pub fn host(binding: &str) -> ObjectStoreHostBinding {
     ObjectStoreHostBinding {
         binding: binding.to_string(),
     }
 }
 
+/// Creates the default host binding for the `wascc:objectstore` capability
 pub fn default() -> ObjectStoreHostBinding {
     ObjectStoreHostBinding::default()
 }
 
 impl ObjectStoreHostBinding {
+    /// Creates a new container within the store
     pub fn create_container(&self, name: &str) -> Result<Container> {
         let cmd = Container {
             id: name.to_string(),
@@ -50,6 +52,8 @@ impl ObjectStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Removes a container from the store. Whether or not this will fail if the container
+    /// has items may be specific to a given provider implementation.
     pub fn remove_container(&self, name: &str) -> Result<()> {
         let cmd = Container {
             id: name.to_string(),
@@ -64,6 +68,7 @@ impl ObjectStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Removes an object from a container
     pub fn remove_object(&self, name: &str, container: &str) -> crate::Result<()> {
         let cmd = Blob {
             id: name.to_string(),
@@ -80,6 +85,7 @@ impl ObjectStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Lists all objects within a container
     pub fn list_objects(&self, container: &str) -> Result<BlobList> {
         let cmd = Container {
             id: container.to_string(),
@@ -94,6 +100,7 @@ impl ObjectStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Obtains binary object metadata, does not include the object bytes
     pub fn get_blob_info(&self, container: &str, id: &str) -> Result<Option<Blob>> {
         let cmd = Blob {
             id: id.to_string(),
@@ -117,6 +124,10 @@ impl ObjectStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Indicates that an upload is about to begin for an item. You should follow this
+    /// call up with a for loop/iteration that sends successive chunks to the store. The chunk
+    /// size specified in this call is a request or suggestion. It is up to the provider to determine
+    /// the actual chunk size, which is returned in the resulting `Transfer` instance
     pub fn start_upload(&self, blob: &Blob, chunk_size: u64, total_bytes: u64) -> Result<Transfer> {
         let transfer = Transfer {
             blob_id: blob.id.to_string(),
@@ -143,6 +154,8 @@ impl ObjectStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Uploads an individual chunk of a file to the blob store. This call must only ever
+    /// come after signaling the start of a new upload with the `start_upload` function.
     pub fn upload_chunk(
         &self,
         transfer: &Transfer,
@@ -167,6 +180,9 @@ impl ObjectStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Sends a request to the provider to begin a chunked download of a file. If this
+    /// succeeds, your actor will begin receiving `OP_RECEIVE_CHUNK` messages from the
+    /// provider.
     pub fn start_download(&self, blob: &Blob, chunk_size: u64) -> crate::Result<Transfer> {
         let transfer = Transfer {
             blob_id: blob.id.to_string(),

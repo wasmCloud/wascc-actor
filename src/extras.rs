@@ -4,16 +4,21 @@ use wascc_codec::{deserialize, serialize};
 
 const CAPID_EXTRAS: &str = "wascc:extras";
 
+/// A hsot binding for the wascc:extras capability
 pub struct ExtrasHostBinding {
     binding: String,
 }
 
+/// Creates a named host binding for the wascc:extras capability. You should never
+/// use this unless you know that a custom host runtime has provided an alternate
+/// extras provider.
 pub fn host(binding: &str) -> ExtrasHostBinding {
     ExtrasHostBinding {
         binding: binding.to_string(),
     }
 }
 
+/// Creates a host binding for the wascc:extras capability
 pub fn default() -> ExtrasHostBinding {
     ExtrasHostBinding {
         binding: "default".to_string(),
@@ -21,9 +26,14 @@ pub fn default() -> ExtrasHostBinding {
 }
 
 impl ExtrasHostBinding {
+    /// Queries the host for a random number within a specified range
     pub fn get_random(&self, min: u32, max: u32) -> crate::Result<u32> {
         let cmd = GeneratorRequest {
-            typ: GeneratorRequestType::RandomNumber(min, max),
+            min,
+            max,
+            random: true,
+            sequence: false,
+            guid: false,
         };
 
         host_call(
@@ -33,16 +43,18 @@ impl ExtrasHostBinding {
             &serialize(cmd)?,
         )
         .map(|v| deserialize::<GeneratorResult>(v.as_ref()).unwrap())
-        .map(|r| match r.value {
-            GeneratorResultType::RandomNumber(n) => n,
-            _ => 0,
-        })
+        .map(|r| r.random_number)
         .map_err(|e| e.into())
     }
 
+    /// Requests a newly generated GUID string from the host
     pub fn get_guid(&self) -> crate::Result<String> {
         let cmd = GeneratorRequest {
-            typ: GeneratorRequestType::Guid,
+            guid: true,
+            random: false,
+            sequence: false,
+            min: 0,
+            max: 0,
         };
         host_call(
             &self.binding,
@@ -51,16 +63,19 @@ impl ExtrasHostBinding {
             &serialize(cmd)?,
         )
         .map(|v| deserialize::<GeneratorResult>(v.as_ref()).unwrap())
-        .map(|r| match r.value {
-            GeneratorResultType::Guid(g) => g,
-            _ => "BADGUID".to_string(),
-        })
+        .map(|r| r.guid.unwrap_or("none".to_string()))
         .map_err(|e| e.into())
     }
 
+    /// Requests a sequence number from the host. Note that the sequence number will only be
+    /// unique within the host, and is not globally unique
     pub fn get_sequence_number(&self) -> crate::Result<u64> {
         let cmd = GeneratorRequest {
-            typ: GeneratorRequestType::SequenceNumber,
+            sequence: true,
+            guid: false,
+            random: false,
+            min: 0,
+            max: 0,
         };
         host_call(
             &self.binding,
@@ -69,10 +84,7 @@ impl ExtrasHostBinding {
             &serialize(cmd)?,
         )
         .map(|v| deserialize::<GeneratorResult>(v.as_ref()).unwrap())
-        .map(|r| match r.value {
-            GeneratorResultType::SequenceNumber(n) => n,
-            _ => 0,
-        })
+        .map(|r| r.sequence_number)
         .map_err(|e| e.into())
     }
 }

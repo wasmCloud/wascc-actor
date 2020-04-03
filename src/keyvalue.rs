@@ -38,17 +38,20 @@ impl Default for KeyValueStoreHostBinding {
     }
 }
 
+/// Creates a named host binding for the key-value store capability
 pub fn host(binding: &str) -> KeyValueStoreHostBinding {
     KeyValueStoreHostBinding {
         binding: binding.to_string(),
     }
 }
 
+/// Creates the default host binding for the key-value store capability
 pub fn default() -> KeyValueStoreHostBinding {
     KeyValueStoreHostBinding::default()
 }
 
 impl KeyValueStoreHostBinding {
+    /// Obtains a single value from the store
     pub fn get(&self, key: &str) -> Result<Option<String>> {
         let cmd = GetRequest {
             key: key.to_string(),
@@ -65,6 +68,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Sets a value in the store
     pub fn set(&self, key: &str, value: &str, expires: Option<u32>) -> Result<()> {
         let cmd = SetRequest {
             key: key.to_string(),
@@ -76,6 +80,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Performs an atomic increment operation
     pub fn atomic_add(&self, key: &str, value: i32) -> Result<i32> {
         let cmd = AddRequest {
             key: key.to_string(),
@@ -89,6 +94,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Adds an item to a list at the given key
     pub fn list_add(&self, key: &str, item: &str) -> Result<usize> {
         let cmd = ListPushRequest {
             key: key.to_string(),
@@ -102,6 +108,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Removes an item from the list at the given key
     pub fn list_del_item(&self, key: &str, item: &str) -> Result<usize> {
         let cmd = ListDelItemRequest {
             key: key.to_string(),
@@ -115,6 +122,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Removes the data associated with a given key, which can include lists or sets
     pub fn del_key(&self, key: &str) -> Result<()> {
         let cmd = DelRequest {
             key: key.to_string(),
@@ -124,6 +132,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Queries a given list-type key for a range of values
     pub fn list_range(
         &self,
         key: &str,
@@ -143,6 +152,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Clears a list while leaving the key intact
     pub fn list_clear(&self, key: &str) -> Result<()> {
         let cmd = ListClearRequest {
             key: key.to_string(),
@@ -152,6 +162,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Adds a value to a set at the given key
     pub fn set_add(&self, key: &str, value: &str) -> Result<usize> {
         let cmd = SetAddRequest {
             key: key.to_string(),
@@ -165,6 +176,7 @@ impl KeyValueStoreHostBinding {
             .map_err(|e| e.into())
     }
 
+    /// Removes a value from the given set
     pub fn set_remove(&self, key: &str, value: &str) -> Result<usize> {
         let cmd = SetRemoveRequest {
             key: key.to_string(),
@@ -183,6 +195,7 @@ impl KeyValueStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Performs a union of sets specified by the list of keys
     pub fn set_union(&self, keys: Vec<String>) -> Result<Vec<String>> {
         let cmd = SetUnionRequest { keys };
         host_call(
@@ -198,6 +211,7 @@ impl KeyValueStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Performs the intersection of sets specified by the given keys
     pub fn set_intersect(&self, keys: Vec<String>) -> Result<Vec<String>> {
         let cmd = SetIntersectionRequest { keys };
         host_call(
@@ -213,6 +227,7 @@ impl KeyValueStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Returns a list of members belonging to a given set
     pub fn set_members(&self, key: &str) -> Result<Vec<String>> {
         let cmd = SetQueryRequest {
             key: key.to_string(),
@@ -230,6 +245,8 @@ impl KeyValueStoreHostBinding {
         .map_err(|e| e.into())
     }
 
+    /// Indicates whether a key exists (not that empty lists/sets may return true for their
+    /// existence if they were cleared instead of deleted)
     pub fn exists(&self, key: &str) -> Result<bool> {
         let cmd = KeyExistsQuery {
             key: key.to_string(),

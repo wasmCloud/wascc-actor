@@ -12,7 +12,7 @@ keywords = ["wapc", "webassembly", "wasm", "wascc", "wasi"]
 categories = ["wasm", "api-bindings"]
 
 [badges]
-travis-ci = { repository = "wascc/wascc-actor", branch = "master" }
+maintenance = {status = "actively-maintained"}
 
 [dependencies]
 #wascc-codec = "0.5.2"
