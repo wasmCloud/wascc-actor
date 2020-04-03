@@ -8,15 +8,14 @@ license = "Apache-2.0"
 homepage = "https://wascc.dev"
 documentation = "https://docs.rs/wascc-actor"
 readme = "README.md"
-keywords = ["wapc", "webassembly", "wasm", "wascc", "wasi"]
+keywords = ["wapc", "webassembly", "wasm", "wascc", "actor"]
 categories = ["wasm", "api-bindings"]
 
 [badges]
 maintenance = {status = "actively-maintained"}
 
 [dependencies]
-#wascc-codec = "0.5.2"
-wascc-codec = {path = "../wascc-codec" }
+wascc-codec = "0.6.0"
 wapc-guest = "0.3.0"
 serde_json = "1.0.50"
 serde_derive = "1.0.105"

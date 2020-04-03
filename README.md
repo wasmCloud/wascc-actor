@@ -1,5 +1,5 @@
 [![crates.io](https://img.shields.io/crates/v/wascc-actor.svg)](https://crates.io/crates/wascc-actor)&nbsp;
-![travis](https://travis-ci.org/wascc/wascc-actor.svg?branch=master)&nbsp;
+![Rust](https://github.com/wascc/wascc-actor/workflows/Rust/badge.svg)&nbsp;
 ![license](https://img.shields.io/crates/l/wascc-actor.svg)&nbsp;
 [![documentation](https://docs.rs/wascc-actor/badge.svg)](https://docs.rs/wascc-actor)
 
@@ -21,7 +21,9 @@ actor_handlers!{ codec::http::OP_HANDLE_REQUEST => hello_world,
 
 fn hello_world(_req: codec::http::Request) -> ReceiveResult {
 
-    // Utilize capabilities via the context here
+    // Utilize capabilities here
+    // ...
+    
     Ok(vec![])
 }
 
@@ -30,7 +32,7 @@ fn health(_req: codec::core::HealthRequest) -> ReceiveResult {
 }
 ```
 
-## Using the wascc:logging capability
+## Debug output vs. using the wascc:logging capability
 
 If you want more functionality beyond the simple `println` call, then you can
 sign your modules with the `wascc:logging` capability and you'll be able to use the idiomatic Rust `log` macros like `debug!`, `warn!`, `trace!`, etc.

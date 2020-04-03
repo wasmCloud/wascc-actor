@@ -3,6 +3,7 @@ use log::{Metadata, Record};
 use wapc_guest::host_call;
 use wascc_codec::logging::*;
 use wascc_codec::serialize;
+use std::sync::{Arc, RwLock};
 
 /// The reserved capability ID for the logging functionality
 pub const CAPID_LOGGING: &str = "wascc:logging";
@@ -13,30 +14,35 @@ const INFO: u32 = 3;
 const DEBUG: u32 = 4;
 const TRACE: u32 = 5;
 
-use std::sync::{Arc, RwLock};
-
 lazy_static! {
-    pub static ref LOG_BINDING: Arc<RwLock<String>> =
-        { Arc::new(RwLock::new("default".to_string())) };
+    static ref CURRENT_BINDING: Arc<RwLock<String>> = { Arc::new(RwLock::new("default".to_string())) };
 }
 
 static LOGGER: AutomaticLoggerHostBinding = AutomaticLoggerHostBinding {};
 
-lazy_static! {
-    pub static ref ENSURE_LOGGER: bool = {
-        log::set_logger(&LOGGER).unwrap();
-        log::set_max_level(log::LevelFilter::Trace);
-        true
-    };
+#[allow(dead_code)]
+#[doc(hidden)]
+pub fn ensure_logger() {
+    match log::set_logger(&LOGGER) {
+        Ok(_) => {},
+        Err(_) => {}
+    }
+    log::set_max_level(log::LevelFilter::Trace);
 }
 
 /// A host binding for the wascc:logging capability
-pub struct AutomaticLoggerHostBinding {}
+pub struct AutomaticLoggerHostBinding {
+}
 
 impl Default for AutomaticLoggerHostBinding {
     fn default() -> Self {
-        AutomaticLoggerHostBinding {}
+        AutomaticLoggerHostBinding {         
+        }
     }
+}
+
+fn set_binding(binding: &str) {
+    *CURRENT_BINDING.write().unwrap() = binding.to_string();
 }
 
 /// Sets the current binding for the logger. Note that because the logger
@@ -46,13 +52,13 @@ impl Default for AutomaticLoggerHostBinding {
 /// bindings that send to two different host bindings, you must instead toggle
 /// between them.
 pub fn host(binding: &str) -> AutomaticLoggerHostBinding {
-    *LOG_BINDING.write().unwrap() = binding.to_string();
+    set_binding(binding);
     AutomaticLoggerHostBinding {}
 }
 
 /// Resets the current logger binding name to the default.
-pub fn default() -> AutomaticLoggerHostBinding {
-    *LOG_BINDING.write().unwrap() = "default".to_string();
+pub fn default() -> AutomaticLoggerHostBinding {        
+    set_binding("default");
     AutomaticLoggerHostBinding {}
 }
 
@@ -77,7 +83,7 @@ impl log::Log for AutomaticLoggerHostBinding {
 impl AutomaticLoggerHostBinding {
     fn _log(&self, req: WriteLogRequest) {
         let _ = host_call(
-            &LOG_BINDING.read().unwrap(),
+            &CURRENT_BINDING.read().unwrap(),
             CAPID_LOGGING,
             OP_LOG,
             &serialize(req).unwrap(),
@@ -91,7 +97,7 @@ impl AutomaticLoggerHostBinding {
             body: body.to_string(),
         };
         let _ = host_call(
-            &LOG_BINDING.read().unwrap(),
+            &CURRENT_BINDING.read().unwrap(),
             CAPID_LOGGING,
             OP_LOG,
             &serialize(l)?,
@@ -106,7 +112,7 @@ impl AutomaticLoggerHostBinding {
             body: body.to_string(),
         };
         let _ = host_call(
-            &LOG_BINDING.read().unwrap(),
+            &CURRENT_BINDING.read().unwrap(),
             CAPID_LOGGING,
             OP_LOG,
             &serialize(l)?,
@@ -121,7 +127,7 @@ impl AutomaticLoggerHostBinding {
             body: body.to_string(),
         };
         let _ = host_call(
-            &LOG_BINDING.read().unwrap(),
+            &CURRENT_BINDING.read().unwrap(),
             CAPID_LOGGING,
             OP_LOG,
             &serialize(l)?,
@@ -136,7 +142,7 @@ impl AutomaticLoggerHostBinding {
             body: body.to_string(),
         };
         let _ = host_call(
-            &LOG_BINDING.read().unwrap(),
+            &CURRENT_BINDING.read().unwrap(),
             CAPID_LOGGING,
             OP_LOG,
             &serialize(l)?,
@@ -151,7 +157,7 @@ impl AutomaticLoggerHostBinding {
             body: body.to_string(),
         };
         let _ = host_call(
-            &LOG_BINDING.read().unwrap(),
+            &CURRENT_BINDING.read().unwrap(),
             CAPID_LOGGING,
             OP_LOG,
             &serialize(l)?,
@@ -166,7 +172,7 @@ impl AutomaticLoggerHostBinding {
             body: body.to_string(),
         };
         let _ = host_call(
-            &LOG_BINDING.read().unwrap(),
+            &CURRENT_BINDING.read().unwrap(),
             CAPID_LOGGING,
             OP_LOG,
             &serialize(l)?,

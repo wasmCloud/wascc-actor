@@ -1,5 +1,5 @@
 #![doc(html_logo_url = "https://avatars2.githubusercontent.com/u/52050279?s=200&v=4")]
-// Copyright 2015-2019 Capital One Services, LLC
+// Copyright 2015-2020 Capital One Services, LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,9 +55,10 @@ use wapc_guest::console_log;
 macro_rules! actor_handlers(
     { $($key:path => $user_handler:ident),* } => {
         use $crate::wapc::prelude::*;
-        let _ = $crate::logger::ENSURE_LOGGER;
+                
         wapc_handler!(handle_wapc);
         fn handle_wapc(operation: &str, msg: &[u8]) -> CallResult {
+            $crate::logger::ensure_logger();
             match operation {
                 $( $key => $user_handler(deserialize(msg)?).map_err(|e| e.into()), )*
                 _ => Err("bad dispatch".into())
