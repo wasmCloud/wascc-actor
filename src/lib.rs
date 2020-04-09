@@ -31,12 +31,12 @@
 //! actor_handlers!{ codec::http::OP_HANDLE_REQUEST => hello_world,
 //!                  codec::core::OP_HEALTH_REQUEST => health }
 //!
-//! pub fn hello_world(_req: codec::http::Request) -> ReceiveResult {
-//!   Ok(vec![])
+//! pub fn hello_world(_req: codec::http::Request) -> HandlerResult<codec::http::Response> {
+//!   Ok(codec::http::Response::ok())
 //! }
 //!
-//! pub fn health(_req: codec::core::HealthRequest) -> ReceiveResult {
-//!   Ok(vec![])
+//! pub fn health(_req: codec::core::HealthRequest) -> HandlerResult<()> {
+//!   Ok(())
 //! }
 //! ```
 
@@ -44,8 +44,8 @@
 extern crate lazy_static;
 
 pub type Result<T> = ::std::result::Result<T, crate::errors::Error>;
-pub type ReceiveResult = ::std::result::Result<Vec<u8>, Box<dyn std::error::Error>>;
-extern crate log;
+pub type HandlerResult<T> = ::std::result::Result<T, Box<dyn std::error::Error>>;
+
 pub extern crate wapc_guest as wapc;
 
 use wapc_guest::console_log;
@@ -55,12 +55,14 @@ use wapc_guest::console_log;
 macro_rules! actor_handlers(
     { $($key:path => $user_handler:ident),* } => {
         use $crate::wapc::prelude::*;
-                
+
         wapc_handler!(handle_wapc);
         fn handle_wapc(operation: &str, msg: &[u8]) -> CallResult {
             $crate::logger::ensure_logger();
             match operation {
-                $( $key => $user_handler(deserialize(msg)?).map_err(|e| e.into()), )*
+                $( $key => $user_handler(deserialize(msg)?)
+                            .and_then(|r| serialize(r))
+                            .map_err(|e| e.into()), )*
                 _ => Err("bad dispatch".into())
             }
         }
