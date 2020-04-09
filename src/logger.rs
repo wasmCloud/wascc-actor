@@ -1,9 +1,9 @@
 use crate::Result;
 use log::{Metadata, Record};
+use std::sync::{Arc, RwLock};
 use wapc_guest::host_call;
 use wascc_codec::logging::*;
 use wascc_codec::serialize;
-use std::sync::{Arc, RwLock};
 
 /// The reserved capability ID for the logging functionality
 pub const CAPID_LOGGING: &str = "wascc:logging";
@@ -15,7 +15,8 @@ const DEBUG: u32 = 4;
 const TRACE: u32 = 5;
 
 lazy_static! {
-    static ref CURRENT_BINDING: Arc<RwLock<String>> = { Arc::new(RwLock::new("default".to_string())) };
+    static ref CURRENT_BINDING: Arc<RwLock<String>> =
+        { Arc::new(RwLock::new("default".to_string())) };
 }
 
 static LOGGER: AutomaticLoggerHostBinding = AutomaticLoggerHostBinding {};
@@ -24,20 +25,18 @@ static LOGGER: AutomaticLoggerHostBinding = AutomaticLoggerHostBinding {};
 #[doc(hidden)]
 pub fn ensure_logger() {
     match log::set_logger(&LOGGER) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(_) => {}
     }
     log::set_max_level(log::LevelFilter::Trace);
 }
 
 /// A host binding for the wascc:logging capability
-pub struct AutomaticLoggerHostBinding {
-}
+pub struct AutomaticLoggerHostBinding {}
 
 impl Default for AutomaticLoggerHostBinding {
     fn default() -> Self {
-        AutomaticLoggerHostBinding {         
-        }
+        AutomaticLoggerHostBinding {}
     }
 }
 
@@ -57,7 +56,7 @@ pub fn host(binding: &str) -> AutomaticLoggerHostBinding {
 }
 
 /// Resets the current logger binding name to the default.
-pub fn default() -> AutomaticLoggerHostBinding {        
+pub fn default() -> AutomaticLoggerHostBinding {
     set_binding("default");
     AutomaticLoggerHostBinding {}
 }
