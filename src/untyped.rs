@@ -14,8 +14,8 @@
 
 //! # Message Broker
 //!
-//! This module contains the message broker client interface through which actor modules access
-//! a bound `wascc:messaging` capability provider
+//! This module contains an untyped host binding implementation to allow for
+//! third party expansion by the community.
 
 use wapc_guest::host_call;
 

@@ -28,11 +28,15 @@
 //!
 //! use actor::prelude::*;
 //!
+//! #[macro_use]
+//! extern crate serde_json;
+//!
 //! actor_handlers!{ codec::http::OP_HANDLE_REQUEST => hello_world,
 //!                  codec::core::OP_HEALTH_REQUEST => health }
 //!
-//! pub fn hello_world(_req: codec::http::Request) -> HandlerResult<codec::http::Response> {
-//!   Ok(codec::http::Response::ok())
+//! fn hello_world(_payload: codec::http::Request) -> CallResult {
+//!     let result = json!({ "hello": "world", "data": 21});
+//!     Ok(serialize(codec::http::Response::json(result, 200, "OK"))?)
 //! }
 //!
 //! pub fn health(_req: codec::core::HealthRequest) -> HandlerResult<()> {
