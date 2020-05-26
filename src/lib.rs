@@ -78,6 +78,7 @@ pub fn println(msg: &str) {
 pub mod errors;
 pub mod events;
 pub mod extras;
+pub mod http_client;
 pub mod keyvalue;
 pub mod logger;
 pub mod messaging;
