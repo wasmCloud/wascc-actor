@@ -1,6 +1,6 @@
 [package]
 name = "wascc-actor"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Kevin Hoffman <alothien@gmail.com>"]
 edition = "2018"
 description = "SDK for developing WebAssembly Actor modules for hosting in waSCC"
@@ -17,8 +17,8 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 wascc-codec = "0.6.0"
 wapc-guest = "0.3.1"
-serde_json = "1.0.51"
-serde_derive = "1.0.106"
-serde = "1.0.106"
+serde_json = "1.0.53"
+serde_derive = "1.0.110"
+serde = "1.0.110"
 log = "0.4.8"
 lazy_static = "1.4.0"
