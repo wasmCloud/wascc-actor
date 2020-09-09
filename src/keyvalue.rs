@@ -1,27 +1,14 @@
-// Copyright 2015-2020 Capital One Services, LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 //! # Key-Value Store
 //!
 //! This module contains the key-value store through which guest modules access
 //! the currently bound `wascap:keyvalue` capability provider
 
-use crate::Result;
 use codec::keyvalue::*;
 use codec::{deserialize, serialize};
 use wapc_guest::host_call;
 use wascc_codec as codec;
+
+use crate::HandlerResult;
 
 const CAPID_KEYVALUE: &str = "wascc:keyvalue";
 
@@ -52,7 +39,7 @@ pub fn default() -> KeyValueStoreHostBinding {
 
 impl KeyValueStoreHostBinding {
     /// Obtains a single value from the store
-    pub fn get(&self, key: &str) -> Result<Option<String>> {
+    pub fn get(&self, key: &str) -> HandlerResult<Option<String>> {
         let cmd = GetRequest {
             key: key.to_string(),
         };
@@ -69,7 +56,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Sets a value in the store
-    pub fn set(&self, key: &str, value: &str, expires: Option<u32>) -> Result<()> {
+    pub fn set(&self, key: &str, value: &str, expires: Option<u32>) -> HandlerResult<()> {
         let cmd = SetRequest {
             key: key.to_string(),
             value: value.to_string(),
@@ -81,7 +68,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Performs an atomic increment operation
-    pub fn atomic_add(&self, key: &str, value: i32) -> Result<i32> {
+    pub fn atomic_add(&self, key: &str, value: i32) -> HandlerResult<i32> {
         let cmd = AddRequest {
             key: key.to_string(),
             value,
@@ -95,7 +82,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Adds an item to a list at the given key
-    pub fn list_add(&self, key: &str, item: &str) -> Result<usize> {
+    pub fn list_add(&self, key: &str, item: &str) -> HandlerResult<usize> {
         let cmd = ListPushRequest {
             key: key.to_string(),
             value: item.to_string(),
@@ -109,7 +96,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Removes an item from the list at the given key
-    pub fn list_del_item(&self, key: &str, item: &str) -> Result<usize> {
+    pub fn list_del_item(&self, key: &str, item: &str) -> HandlerResult<usize> {
         let cmd = ListDelItemRequest {
             key: key.to_string(),
             value: item.to_string(),
@@ -123,7 +110,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Removes the data associated with a given key, which can include lists or sets
-    pub fn del_key(&self, key: &str) -> Result<()> {
+    pub fn del_key(&self, key: &str) -> HandlerResult<()> {
         let cmd = DelRequest {
             key: key.to_string(),
         };
@@ -138,7 +125,7 @@ impl KeyValueStoreHostBinding {
         key: &str,
         start: isize,
         stop_inclusive: isize,
-    ) -> Result<Vec<String>> {
+    ) -> HandlerResult<Vec<String>> {
         let cmd = ListRangeRequest {
             key: key.to_string(),
             start: start as i32,
@@ -153,7 +140,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Clears a list while leaving the key intact
-    pub fn list_clear(&self, key: &str) -> Result<()> {
+    pub fn list_clear(&self, key: &str) -> HandlerResult<()> {
         let cmd = ListClearRequest {
             key: key.to_string(),
         };
@@ -163,7 +150,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Adds a value to a set at the given key
-    pub fn set_add(&self, key: &str, value: &str) -> Result<usize> {
+    pub fn set_add(&self, key: &str, value: &str) -> HandlerResult<usize> {
         let cmd = SetAddRequest {
             key: key.to_string(),
             value: value.to_string(),
@@ -177,7 +164,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Removes a value from the given set
-    pub fn set_remove(&self, key: &str, value: &str) -> Result<usize> {
+    pub fn set_remove(&self, key: &str, value: &str) -> HandlerResult<usize> {
         let cmd = SetRemoveRequest {
             key: key.to_string(),
             value: value.to_string(),
@@ -196,7 +183,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Performs a union of sets specified by the list of keys
-    pub fn set_union(&self, keys: Vec<String>) -> Result<Vec<String>> {
+    pub fn set_union(&self, keys: Vec<String>) -> HandlerResult<Vec<String>> {
         let cmd = SetUnionRequest { keys };
         host_call(
             &self.binding,
@@ -212,7 +199,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Performs the intersection of sets specified by the given keys
-    pub fn set_intersect(&self, keys: Vec<String>) -> Result<Vec<String>> {
+    pub fn set_intersect(&self, keys: Vec<String>) -> HandlerResult<Vec<String>> {
         let cmd = SetIntersectionRequest { keys };
         host_call(
             &self.binding,
@@ -228,7 +215,7 @@ impl KeyValueStoreHostBinding {
     }
 
     /// Returns a list of members belonging to a given set
-    pub fn set_members(&self, key: &str) -> Result<Vec<String>> {
+    pub fn set_members(&self, key: &str) -> HandlerResult<Vec<String>> {
         let cmd = SetQueryRequest {
             key: key.to_string(),
         };
@@ -247,7 +234,7 @@ impl KeyValueStoreHostBinding {
 
     /// Indicates whether a key exists (not that empty lists/sets may return true for their
     /// existence if they were cleared instead of deleted)
-    pub fn exists(&self, key: &str) -> Result<bool> {
+    pub fn exists(&self, key: &str) -> HandlerResult<bool> {
         let cmd = KeyExistsQuery {
             key: key.to_string(),
         };

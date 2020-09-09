@@ -3,9 +3,10 @@
 //! This module contains the HTTP client through which actors consume
 //! the currently bound `wascap:http_client` capability provider
 
-use crate::Result;
 use wapc_guest::host_call;
 use wascc_codec::{deserialize, http::*, serialize};
+
+use crate::HandlerResult;
 
 const CAPID_HTTPCLIENT: &str = "wascc:http_client";
 
@@ -35,7 +36,7 @@ pub fn default() -> HttpClientHostBinding {
 }
 
 impl HttpClientHostBinding {
-    pub fn request(&self, request: Request) -> Result<Response> {
+    pub fn request(&self, request: Request) -> HandlerResult<Response> {
         host_call(
             &self.binding,
             CAPID_HTTPCLIENT,

@@ -129,6 +129,12 @@ impl From<std::string::FromUtf8Error> for Error {
     }
 }
 
+impl From<Box<dyn ::std::error::Error + Send + Sync>> for Error {
+    fn from(source: Box<dyn ::std::error::Error + Send + Sync>) -> Error {
+        Error(Box::new(ErrorKind::MiscError(source)))
+    }
+}
+
 impl From<Box<dyn ::std::error::Error>> for Error {
     fn from(source: Box<dyn ::std::error::Error>) -> Error {
         Error(Box::new(ErrorKind::MiscError(source)))

@@ -1,8 +1,9 @@
-use crate::Result;
 use std::collections::HashMap;
 use wapc_guest::host_call;
 use wascc_codec::eventstreams::*;
 use wascc_codec::{deserialize, serialize};
+
+use crate::HandlerResult;
 
 const CAPID_EVENTS: &str = "wascc:eventstreams";
 
@@ -27,7 +28,11 @@ pub struct EventStreamsHostBinding {
 
 impl EventStreamsHostBinding {
     /// Writes the given event (a collection of key-value pairs) to a named stream
-    pub fn write_event(&self, stream: &str, values: HashMap<String, String>) -> Result<String> {
+    pub fn write_event(
+        &self,
+        stream: &str,
+        values: HashMap<String, String>,
+    ) -> HandlerResult<String> {
         let ev = Event {
             event_id: "".to_string(),
             stream: stream.to_string(),
@@ -45,19 +50,19 @@ impl EventStreamsHostBinding {
     }
 
     /// Reads all available events from the given stream
-    pub fn read_all(&self, stream: &str) -> Result<Vec<Event>> {
+    pub fn read_all(&self, stream: &str) -> HandlerResult<Vec<Event>> {
         let query = self.generate_query(0, stream, None);
         self.execute_query(query)
     }
 
     /// Reads all available events from a given stream up to a given maximum number.
     /// May return less than the specified limit if less than that exist on the stream
-    pub fn read_limit(&self, stream: &str, limit: u64) -> Result<Vec<Event>> {
+    pub fn read_limit(&self, stream: &str, limit: u64) -> HandlerResult<Vec<Event>> {
         let query = self.generate_query(limit, stream, None);
         self.execute_query(query)
     }
 
-    fn execute_query(&self, query: StreamQuery) -> Result<Vec<Event>> {
+    fn execute_query(&self, query: StreamQuery) -> HandlerResult<Vec<Event>> {
         host_call(
             &self.binding,
             CAPID_EVENTS,

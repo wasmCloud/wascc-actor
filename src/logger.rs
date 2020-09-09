@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::HandlerResult;
 use log::{Metadata, Record};
 use std::sync::{Arc, RwLock};
 use wapc_guest::host_call;
@@ -90,7 +90,7 @@ impl AutomaticLoggerHostBinding {
     }
 
     /// Write a log entry on the host
-    pub fn log(&self, level: u32, body: &str) -> Result<()> {
+    pub fn log(&self, level: u32, body: &str) -> HandlerResult<()> {
         let l = WriteLogRequest {
             level: level,
             body: body.to_string(),
@@ -105,7 +105,7 @@ impl AutomaticLoggerHostBinding {
     }
 
     /// Write a log entry at the error level. You should instead use the `error!` macro
-    pub fn error(&self, body: &str) -> Result<()> {
+    pub fn error(&self, body: &str) -> HandlerResult<()> {
         let l = WriteLogRequest {
             level: ERROR,
             body: body.to_string(),
@@ -120,7 +120,7 @@ impl AutomaticLoggerHostBinding {
     }
 
     /// Write a log entry at the warn level. You should instead use the `warn!` macro
-    pub fn warn(&self, body: &str) -> Result<()> {
+    pub fn warn(&self, body: &str) -> HandlerResult<()> {
         let l = WriteLogRequest {
             level: WARN,
             body: body.to_string(),
@@ -135,7 +135,7 @@ impl AutomaticLoggerHostBinding {
     }
 
     /// Write a log entry at the info level. You should instead use the `info!` macro
-    pub fn info(&self, body: &str) -> Result<()> {
+    pub fn info(&self, body: &str) -> HandlerResult<()> {
         let l = WriteLogRequest {
             level: INFO,
             body: body.to_string(),
@@ -150,7 +150,7 @@ impl AutomaticLoggerHostBinding {
     }
 
     /// Write a log entry at the debug level. You should instead use the `debug!` macro
-    pub fn debug(&self, body: &str) -> Result<()> {
+    pub fn debug(&self, body: &str) -> HandlerResult<()> {
         let l = WriteLogRequest {
             level: DEBUG,
             body: body.to_string(),
@@ -165,7 +165,7 @@ impl AutomaticLoggerHostBinding {
     }
 
     /// Write a log entry at the trace level. You should instead use the `trace!` macro
-    pub fn trace(&self, body: &str) -> Result<()> {
+    pub fn trace(&self, body: &str) -> HandlerResult<()> {
         let l = WriteLogRequest {
             level: TRACE,
             body: body.to_string(),

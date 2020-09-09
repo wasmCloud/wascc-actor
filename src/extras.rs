@@ -27,7 +27,7 @@ pub fn default() -> ExtrasHostBinding {
 
 impl ExtrasHostBinding {
     /// Queries the host for a random number within a specified range
-    pub fn get_random(&self, min: u32, max: u32) -> crate::Result<u32> {
+    pub fn get_random(&self, min: u32, max: u32) -> crate::HandlerResult<u32> {
         let cmd = GeneratorRequest {
             min,
             max,
@@ -48,7 +48,7 @@ impl ExtrasHostBinding {
     }
 
     /// Requests a newly generated GUID string from the host
-    pub fn get_guid(&self) -> crate::Result<String> {
+    pub fn get_guid(&self) -> crate::HandlerResult<String> {
         let cmd = GeneratorRequest {
             guid: true,
             random: false,
@@ -69,7 +69,7 @@ impl ExtrasHostBinding {
 
     /// Requests a sequence number from the host. Note that the sequence number will only be
     /// unique within the host, and is not globally unique
-    pub fn get_sequence_number(&self) -> crate::Result<u64> {
+    pub fn get_sequence_number(&self) -> crate::HandlerResult<u64> {
         let cmd = GeneratorRequest {
             sequence: true,
             guid: false,

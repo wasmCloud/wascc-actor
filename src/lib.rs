@@ -1,17 +1,4 @@
 #![doc(html_logo_url = "https://avatars2.githubusercontent.com/u/52050279?s=200&v=4")]
-// Copyright 2015-2020 Capital One Services, LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 
 //! # wascc-actor
 //!
@@ -28,8 +15,10 @@
 //!
 //! use actor::prelude::*;
 //!
-//! actor_handlers!{ codec::http::OP_HANDLE_REQUEST => hello_world,
-//!                  codec::core::OP_HEALTH_REQUEST => health }
+//! actor_handlers!{
+//!    codec::http::OP_HANDLE_REQUEST => hello_world,
+//!    codec::core::OP_HEALTH_REQUEST => health
+//! }
 //!
 //! pub fn hello_world(_req: codec::http::Request) -> HandlerResult<codec::http::Response> {
 //!   Ok(codec::http::Response::ok())
@@ -43,8 +32,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-pub type Result<T> = ::std::result::Result<T, crate::errors::Error>;
-pub type HandlerResult<T> = ::std::result::Result<T, Box<dyn std::error::Error>>;
+pub type HandlerResult<T> = ::std::result::Result<T, Box<dyn std::error::Error + Sync + Send>>;
 
 pub extern crate wapc_guest as wapc;
 
